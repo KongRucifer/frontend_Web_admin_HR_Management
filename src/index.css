@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Blue + white theme (shadcn CSS-variable convention, HSL triplets). */
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --primary: 200 82% 55%; /* #2EACEB */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 200 82% 94%; /* light #2EACEB tint */
+    --secondary-foreground: 200 82% 30%;
+
+    --muted: 200 30% 96%;
+    --muted-foreground: 200 12% 46%;
+
+    --accent: 200 82% 94%;
+    --accent-foreground: 200 82% 30%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 30% 90%;
+    --input: 200 30% 90%;
+    --ring: 200 82% 55%;
+
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222 30% 22%;
+
+    --radius: 0.6rem;
+  }
+
+  .dark {
+    --background: 222 47% 9%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 47% 12%;
+    --card-foreground: 210 40% 96%;
+
+    --primary: 200 85% 60%;
+    --primary-foreground: 200 70% 8%;
+
+    --secondary: 200 40% 20%;
+    --secondary-foreground: 200 40% 92%;
+
+    --muted: 200 30% 18%;
+    --muted-foreground: 200 15% 65%;
+
+    --accent: 200 40% 20%;
+    --accent-foreground: 200 40% 92%;
+
+    --destructive: 0 63% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 30% 22%;
+    --input: 200 30% 22%;
+    --ring: 200 85% 60%;
+
+    --sidebar: 222 47% 12%;
+    --sidebar-foreground: 200 40% 92%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer components {
+  /* Brand gradient built around #2EACEB, reused across the app. */
+  .brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      #5ac6f0 0%,
+      #2eaceb 50%,
+      #1a93d6 100%
+    );
+  }
+  .brand-text {
+    background-image: linear-gradient(135deg, #2eaceb, #1a93d6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@layer utilities {
+  /* Smooth page transition when navigating between menu items. */
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  .animate-page {
+    animation: page-in 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Confetti burst (birthday celebration) */
+  @keyframes confetti-fall {
+    0% {
+      transform: translateY(-12vh) translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(110vh) translateX(var(--drift, 0)) rotate(720deg);
+      opacity: 0.85;
+    }
+  }
+  .confetti-piece {
+    position: absolute;
+    top: 0;
+    animation-name: confetti-fall;
+    animation-timing-function: cubic-bezier(0.3, 0.6, 0.7, 1);
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+  }
+
+  /* Celebratory card pop-in */
+  @keyframes pop-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.9) translateY(8px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+  .animate-pop {
+    animation: pop-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
