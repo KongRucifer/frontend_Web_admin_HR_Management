@@ -14,7 +14,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
+import { SelectField } from '@/components/ui/select-menu';
 import {
   Table,
   TableBody,
@@ -23,11 +25,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { EmailHint } from '@/components/ui/email-hint';
+import { UsernameHint } from '@/components/ui/username-hint';
 import { formatDateTime } from '@/lib/utils';
+import { useEmailStatus } from '@/lib/use-email-status';
+import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
+import type { Role } from '@/types';
+import { ActorCell } from './_shared';
 
-const empty = { email: '', username: '', password: '', confirmPassword: '' };
+const empty = {
+  email: '',
+  username: '',
+  password: '',
+  confirmPassword: '',
+  role: 'employee' as Role,
+};
 
 export function UsersPage() {
   const { t } = useTranslation();
@@ -37,6 +51,8 @@ export function UsersPage() {
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
+  const usernameStatus = useUsernameStatus(form.username);
+  const emailStatus = useEmailStatus(form.email);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,14 +64,26 @@ export function UsersPage() {
       toast.warning(t('users.password_mismatch'));
       return;
     }
+    if (usernameStatus === 'taken') {
+      toast.warning(t('users.username_taken'));
+      return;
+    }
+    if (emailStatus === 'taken') {
+      toast.warning(t('users.email_taken'));
+      return;
+    }
+    if (emailStatus === 'invalid') {
+      toast.warning(t('employees.invalid_email'));
+      return;
+    }
     try {
-      // New users created here are admins (role auto-assigned).
+      // Role is chosen in the form (admin or employee), not auto-assigned.
       await save.mutateAsync({
         body: {
           email: form.email,
-          username: form.username || undefined,
+          username: form.username, // login identifier — required
           password: form.password,
-          role: 'admin',
+          role: form.role,
         },
       });
       setOpen(false);
@@ -101,13 +129,15 @@ export function UsersPage() {
                 <TableHead>{t('users.role')}</TableHead>
                 <TableHead>{t('common.status')}</TableHead>
                 <TableHead>{t('users.last_login')}</TableHead>
+                <TableHead>{t('common.created_by')}</TableHead>
+                <TableHead>{t('common.updated_by')}</TableHead>
                 <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     {t('common.loading')}
                   </TableCell>
                 </TableRow>
@@ -123,6 +153,8 @@ export function UsersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>{formatDateTime(u.lastLogin)}</TableCell>
+                  <TableCell><ActorCell actor={u.createdBy} /></TableCell>
+                  <TableCell><ActorCell actor={u.updatedBy} /></TableCell>
                   <TableCell className="text-right">
                     {/* Admin accounts cannot be deleted here. */}
                     {u.role !== 'admin' && (
@@ -135,7 +167,7 @@ export function UsersPage() {
               ))}
               {!isLoading && data?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
                   </TableCell>
                 </TableRow>
@@ -154,18 +186,37 @@ export function UsersPage() {
             <div className="space-y-1.5">
               <Label>{t('users.email')}</Label>
               <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required autoFocus />
+              <EmailHint status={emailStatus} />
             </div>
             <div className="space-y-1.5">
+              {/* Username is the login identifier — required. */}
               <Label>{t('users.username')}</Label>
-              <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+              <Input
+                value={form.username}
+                onChange={(e) => setForm({ ...form, username: e.target.value })}
+                required
+                minLength={3}
+              />
+              <UsernameHint status={usernameStatus} />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('users.role')}</Label>
+              <SelectField
+                value={form.role}
+                onValueChange={(v) => setForm({ ...form, role: v as Role })}
+                options={[
+                  { value: 'employee', label: t('roles.employee') },
+                  { value: 'admin', label: t('roles.admin') },
+                ]}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>{t('users.password')}</Label>
-              <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} />
+              <PasswordInput value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={8} />
             </div>
             <div className="space-y-1.5">
               <Label>{t('users.confirm_password')}</Label>
-              <Input type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required />
+              <PasswordInput value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} required />
               {form.confirmPassword.length > 0 && form.password !== form.confirmPassword && (
                 <p className="text-xs text-destructive">{t('users.password_mismatch')}</p>
               )}
@@ -173,7 +224,7 @@ export function UsersPage() {
             <p className="text-xs text-muted-foreground">{t('users.create_hint')}</p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>
-              <Button type="submit" disabled={save.isPending}>{save.isPending ? t('common.saving') : t('common.save')}</Button>
+              <Button type="submit" disabled={save.isPending || usernameStatus === 'taken' || emailStatus === 'taken' || emailStatus === 'invalid'}>{save.isPending ? t('common.saving') : t('common.save')}</Button>
             </DialogFooter>
           </form>
         </DialogContent>

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useUIStore } from '@/store/ui.store';
+import { Logo } from '@/components/Logo';
 import { HeaderControls } from './HeaderControls';
 import { navItems } from './nav-items';
 
@@ -16,9 +17,7 @@ export function TopNav() {
       {/* Row 1: brand (left) + controls (right) */}
       <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-3 px-4 lg:px-6">
         <div className="flex items-center gap-2.5">
-          <div className="brand-gradient flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white shadow-sm">
-            LTS
-          </div>
+          <Logo className="h-9 w-auto" />
           <span className="hidden text-base font-semibold sm:block">
             {t('app.title')}
           </span>

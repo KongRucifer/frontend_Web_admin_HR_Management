@@ -7,6 +7,7 @@ import {
   useEmployees,
   usePositions,
   useSaveEmployee,
+  useUsers,
 } from '@/api/hooks';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { SelectField } from '@/components/ui/select-menu';
@@ -33,10 +35,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { EmailHint } from '@/components/ui/email-hint';
+import { UsernameHint } from '@/components/ui/username-hint';
+import { cn, formatDate } from '@/lib/utils';
+import { useDebounce } from '@/lib/use-debounce';
+import { useEmailStatus } from '@/lib/use-email-status';
+import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { Employee } from '@/types';
-import { Pagination } from './_shared';
+import { ActorCell, Pagination } from './_shared';
 
 const emptyForm = {
   firstName: '',
@@ -49,6 +57,7 @@ const emptyForm = {
   status: 'active',
   username: '',
   password: '',
+  existingUserId: '',
 };
 
 export function EmployeesPage() {
@@ -57,24 +66,37 @@ export function EmployeesPage() {
   const [search, setSearch] = useState('');
   const [departmentId, setDepartmentId] = useState('');
 
+  // Only fetch once the user stops typing (waits 400ms).
+  const debouncedSearch = useDebounce(search, 400);
+
   const { data, isLoading } = useEmployees({
     page,
     limit: 10,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     departmentId: departmentId || undefined,
   });
   const departments = useDepartments();
   const positions = usePositions();
+  const users = useUsers();
   const save = useSaveEmployee();
   const del = useDeleteEmployee();
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
   const [form, setForm] = useState(emptyForm);
+  // For a new employee, either create a fresh login account or link an existing one.
+  const [accountMode, setAccountMode] = useState<'new' | 'existing'>('new');
+
+  // Existing accounts that can be linked: employee-role accounts not yet
+  // attached to any employee.
+  const linkableUsers = (users.data ?? []).filter(
+    (u) => !u.employeeId && u.role === 'employee',
+  );
 
   const openNew = () => {
     setEditing(null);
     setForm(emptyForm);
+    setAccountMode('new');
     setOpen(true);
   };
   const openEdit = (e: Employee) => {
@@ -83,11 +105,13 @@ export function EmployeesPage() {
       ...emptyForm,
       firstName: e.firstName,
       lastName: e.lastName,
-      email: e.email ?? '',
+      // Email belongs to the login account — not editable here (manage via /users).
       phone: e.phone ?? '',
       departmentId: e.departmentId ?? '',
       positionId: e.positionId ?? '',
-      birthDate: e.birthDate ?? '',
+      // The API returns '1998-05-20T00:00:00.000Z'; the form (and the DatePicker)
+      // work in 'YYYY-MM-DD', which is also what gets POSTed back on save.
+      birthDate: e.birthDate?.slice(0, 10) ?? '',
       status: e.status,
     });
     setOpen(true);
@@ -119,26 +143,45 @@ export function EmployeesPage() {
   // ---- inline validation (checked live, before submit) ----
   const emailValid = /^\S+@\S+\.\S+$/.test(form.email);
   const passwordValid = form.password.length >= 8;
+  const creatingNewAccount = !editing && accountMode === 'new';
+  // Only evaluate username/email availability when creating a fresh account.
+  const usernameStatus = useUsernameStatus(
+    creatingNewAccount ? form.username : '',
+  );
+  const emailStatus = useEmailStatus(creatingNewAccount ? form.email : '');
 
   const submit = async (ev: React.FormEvent) => {
     ev.preventDefault();
-    // New employees always get a login account, so email + password are required.
     if (!editing) {
-      if (!emailValid) {
-        toast.warning(t('employees.invalid_email'));
-        return;
-      }
-      if (!passwordValid) {
-        toast.warning(t('employees.password_short'));
+      if (accountMode === 'new') {
+        // A fresh login account needs a valid email + password.
+        if (!emailValid) {
+          toast.warning(t('employees.invalid_email'));
+          return;
+        }
+        if (!passwordValid) {
+          toast.warning(t('employees.password_short'));
+          return;
+        }
+        if (usernameStatus === 'taken') {
+          toast.warning(t('users.username_taken'));
+          return;
+        }
+        if (emailStatus === 'taken') {
+          toast.warning(t('users.email_taken'));
+          return;
+        }
+      } else if (!form.existingUserId) {
+        toast.warning(t('employees.account_select_existing'));
         return;
       }
     }
 
     const base: any = {
       // employeeCode + schedule are auto-assigned by the backend.
+      // NOTE: no email here — it belongs to the login account (see below).
       firstName: form.firstName,
       lastName: form.lastName,
-      email: form.email || undefined,
       phone: form.phone || undefined,
       departmentId: form.departmentId || undefined,
       positionId: form.positionId || undefined,
@@ -146,12 +189,17 @@ export function EmployeesPage() {
       status: editing ? form.status : 'active',
     };
     if (!editing) {
-      // Every new employee gets an account with the "employee" role.
       base.createAccount = true;
-      base.username = form.username || undefined;
-      base.loginEmail = form.email;
-      base.password = form.password;
-      base.role = 'employee';
+      if (accountMode === 'existing') {
+        // Attach the chosen existing account to this new employee.
+        base.existingUserId = form.existingUserId;
+      } else {
+        // Provision a brand-new account with the "employee" role.
+        base.email = form.email; // the account's email
+        base.username = form.username || undefined;
+        base.password = form.password;
+        base.role = 'employee';
+      }
     }
     try {
       await save.mutateAsync(editing ? { id: editing.id, body: base } : { body: base });
@@ -198,14 +246,17 @@ export function EmployeesPage() {
                 <TableHead>{t('employees.name')}</TableHead>
                 <TableHead>{t('employees.department')}</TableHead>
                 <TableHead>{t('employees.position')}</TableHead>
+                <TableHead>{t('employees.birth_date')}</TableHead>
                 <TableHead>{t('employees.status')}</TableHead>
+                <TableHead>{t('common.created_by')}</TableHead>
+                <TableHead>{t('common.updated_by')}</TableHead>
                 <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                     {t('common.loading')}
                   </TableCell>
                 </TableRow>
@@ -215,12 +266,15 @@ export function EmployeesPage() {
                   <TableCell className="font-mono text-xs">{e.employeeCode}</TableCell>
                   <TableCell className="font-medium">{e.firstName} {e.lastName}</TableCell>
                   <TableCell>{e.department?.name ?? '-'}</TableCell>
-                  <TableCell>{e.positionRef?.name ?? e.position ?? '-'}</TableCell>
+                  <TableCell>{e.positionRef?.name ?? '-'}</TableCell>
+                  <TableCell>{formatDate(e.birthDate)}</TableCell>
                   <TableCell>
                     <Badge variant={e.status === 'active' ? 'success' : 'muted'}>
                       {t(`status.${e.status}`)}
                     </Badge>
                   </TableCell>
+                  <TableCell><ActorCell actor={e.createdBy} /></TableCell>
+                  <TableCell><ActorCell actor={e.updatedBy} /></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
@@ -254,7 +308,7 @@ export function EmployeesPage() {
               ))}
               {!isLoading && (data?.items.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
                   </TableCell>
                 </TableRow>
@@ -311,16 +365,6 @@ export function EmployeesPage() {
                 <Label>{t('employees.birth_date')}</Label>
                 <DatePicker value={form.birthDate} onChange={(v) => setForm({ ...form, birthDate: v })} />
               </div>
-              <div className="space-y-1.5">
-                <Label>
-                  {t('employees.email')}
-                  {!editing && <span className="text-destructive"> *</span>}
-                </Label>
-                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                {!editing && form.email.length > 0 && !emailValid && (
-                  <p className="text-xs text-destructive">{t('employees.invalid_email')}</p>
-                )}
-              </div>
               {editing && (
                 <div className="space-y-1.5">
                   <Label>{t('employees.status')}</Label>
@@ -332,28 +376,87 @@ export function EmployeesPage() {
               )}
             </div>
 
-            {/* Login account — always created for new employees */}
+            {/* Login account — new employees get one, either fresh or linked */}
             {!editing && (
               <div className="rounded-md border border-border p-3">
                 <div className="mb-3 text-sm font-medium">
                   {t('employees.account_section')}
                 </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label>{t('employees.account_username')}</Label>
-                    <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder={t('employees.account_username')} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label>{t('employees.account_password')} <span className="text-destructive">*</span></Label>
-                    <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                    {form.password.length > 0 && !passwordValid && (
-                      <p className="text-xs text-destructive">{t('employees.password_short')}</p>
-                    )}
-                  </div>
+
+                {/* Choose: create a new account, or link an existing one. */}
+                <div className="mb-3 grid grid-cols-2 gap-2">
+                  {(['new', 'existing'] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setAccountMode(mode)}
+                      className={cn(
+                        'rounded-md border px-3 py-2 text-sm transition-colors',
+                        accountMode === mode
+                          ? 'border-primary bg-primary/5 font-medium text-primary'
+                          : 'border-border text-muted-foreground hover:bg-accent',
+                      )}
+                    >
+                      {mode === 'new'
+                        ? t('employees.account_create_new')
+                        : t('employees.account_use_existing')}
+                    </button>
+                  ))}
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {t('employees.account_hint')}
-                </p>
+
+                {accountMode === 'new' ? (
+                  <>
+                    {/* Email belongs to the login account (used for notifications
+                        and the password-reset OTP), so it lives in this section. */}
+                    <div className="mb-3 space-y-1.5">
+                      <Label>
+                        {t('employees.email')}
+                        <span className="text-destructive"> *</span>
+                      </Label>
+                      <Input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      />
+                      <EmailHint status={emailStatus} />
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label>{t('employees.account_username')}</Label>
+                        <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder={t('employees.account_username')} />
+                        <UsernameHint status={usernameStatus} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>{t('employees.account_password')} <span className="text-destructive">*</span></Label>
+                        <PasswordInput value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                        {form.password.length > 0 && !passwordValid && (
+                          <p className="text-xs text-destructive">{t('employees.password_short')}</p>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {t('employees.account_hint')}
+                    </p>
+                  </>
+                ) : (
+                  <div className="space-y-1.5">
+                    <Label>{t('employees.account_select_existing')}</Label>
+                    <Combobox
+                      value={form.existingUserId || undefined}
+                      onValueChange={(v) => setForm({ ...form, existingUserId: v })}
+                      placeholder={t('employees.account_select_existing')}
+                      options={linkableUsers.map((u) => ({
+                        value: u.id,
+                        label: u.username ? `${u.username} · ${u.email}` : u.email,
+                      }))}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {linkableUsers.length === 0
+                        ? t('employees.no_linkable')
+                        : t('employees.account_existing_hint')}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -361,7 +464,14 @@ export function EmployeesPage() {
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={save.isPending}>
+              <Button
+                type="submit"
+                disabled={
+                  save.isPending ||
+                  usernameStatus === 'taken' ||
+                  (creatingNewAccount && emailStatus === 'taken')
+                }
+              >
                 {save.isPending ? t('common.saving') : t('common.save')}
               </Button>
             </DialogFooter>

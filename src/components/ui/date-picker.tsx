@@ -11,9 +11,17 @@ function toISO(d: Date): string {
   return `${d.getFullYear()}-${m}-${day}`;
 }
 
+/**
+ * Accepts "YYYY-MM-DD" and also a full ISO timestamp, since the API returns
+ * @db.Date columns as "1998-05-20T00:00:00.000Z".
+ *
+ * Slices the date part instead of parsing the instant: parsing would read the
+ * UTC-midnight value in local time and shift the day backwards on any timezone
+ * west of UTC.
+ */
 function parse(value?: string): Date | null {
   if (!value) return null;
-  const d = new Date(`${value}T00:00:00`);
+  const d = new Date(`${value.slice(0, 10)}T00:00:00`);
   return isNaN(d.getTime()) ? null : d;
 }
 

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
-import type { AttendanceStatus } from '@/types';
+import type { ActorRef, AttendanceStatus, RequestKind } from '@/types';
 
 /** Confirm dialog → delete → success/error toast. Reused across tables. */
 export async function confirmDelete(
@@ -26,16 +26,52 @@ export async function confirmDelete(
   }
 }
 
-const statusVariant: Record<AttendanceStatus, 'success' | 'warning' | 'destructive' | 'muted'> = {
-  present: 'success',
+// A Record (not a partial map) on purpose: adding an AttendanceStatus member
+// is a compile error here until it gets a variant.
+const statusVariant: Record<
+  AttendanceStatus,
+  'success' | 'warning' | 'destructive' | 'muted' | 'default'
+> = {
+  on_time: 'success',
   late: 'warning',
   absent: 'destructive',
   leave: 'muted',
+  emergency: 'default',
 };
 
 export function StatusBadge({ status }: { status: AttendanceStatus }) {
   const { t } = useTranslation();
   return <Badge variant={statusVariant[status]}>{t(`status.${status}`)}</Badge>;
+}
+
+/**
+ * Small badge shown beside the Date cell when the day is covered by an approved
+ * request. Renders the request's type name ("Annual leave", "Illness"), falling
+ * back to the generic kind label. Returns null for ordinary days, so unaffected
+ * rows lay out exactly as before.
+ */
+export function RequestTypeBadge({
+  kind,
+  name,
+}: {
+  kind: RequestKind | null;
+  name: string | null;
+}) {
+  const { t } = useTranslation();
+  if (!kind) return null;
+  return (
+    <Badge variant={kind === 'leave' ? 'muted' : 'default'}>
+      {name ?? t(`status.${kind}`)}
+    </Badge>
+  );
+}
+
+/** Renders the username (or email) of a created_by / updated_by actor. */
+export function ActorCell({ actor }: { actor?: ActorRef | null }) {
+  const label = actor?.username || actor?.email;
+  return (
+    <span className="text-sm text-muted-foreground">{label ?? '—'}</span>
+  );
 }
 
 export function Pagination({

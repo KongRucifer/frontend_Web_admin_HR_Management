@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 
 /**
  * Search users (by name / phone / email) and collect several into a "bucket",
- * then confirm. Used to add leave-chain approvers and sick approvers.
+ * then confirm. Used to add leave-chain approvers and emergency approvers.
  */
 export function ApproverPickerDialog({
   open,

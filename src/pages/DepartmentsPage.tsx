@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
+import { SelectField } from '@/components/ui/select-menu';
 import {
   Table,
   TableBody,
@@ -205,12 +205,15 @@ function PositionsCard() {
             </div>
             <div className="space-y-1.5">
               <Label>{t('positions.department')}</Label>
-              <Select value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })} required>
-                <option value="">-</option>
-                {departments.data?.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </Select>
+              <SelectField
+                value={form.departmentId || undefined}
+                onValueChange={(v) => setForm({ ...form, departmentId: v })}
+                placeholder={t('positions.department')}
+                options={(departments.data ?? []).map((d) => ({
+                  value: d.id,
+                  label: d.name,
+                }))}
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>{t('common.cancel')}</Button>

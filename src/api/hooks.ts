@@ -6,11 +6,13 @@ import {
 import { api } from '@/lib/api';
 import type {
   Attendance,
+  AttendanceStatus,
   BirthdaysResponse,
   Department,
   Employee,
   Paginated,
   Position,
+  RequestKind,
   User,
   WifiNetwork,
   WorkSchedule,
@@ -189,9 +191,15 @@ export interface AttendanceQuery {
   page?: number;
   limit?: number;
   employeeId?: string;
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
-  status?: string;
+  // Typed against the enum so a rename fails to compile instead of 400ing.
+  status?: AttendanceStatus;
+  // Filters to days covered by an approved request (matched on the FK).
+  // A partial-day emergency keeps status 'on_time', so status=emergency
+  // would miss it — use `kind` for leave/emergency filtering.
+  kind?: RequestKind;
 }
 
 export const useAttendance = (query: AttendanceQuery) =>
@@ -243,3 +251,37 @@ export const useDeleteUser = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
 };
+
+// Live availability check for the create forms (debounce the input first).
+export interface Availability {
+  usernameAvailable: boolean | null;
+  emailAvailable: boolean | null;
+}
+
+export const useCheckUsername = (username: string) =>
+  useQuery({
+    queryKey: ['username-availability', username],
+    queryFn: async () =>
+      (
+        await api.get<Availability>('/users/availability', {
+          params: { username },
+        })
+      ).data,
+    // Backend requires a username of at least 3 chars; skip shorter queries.
+    enabled: username.trim().length >= 3,
+    staleTime: 10_000,
+  });
+
+export const useCheckEmail = (email: string) =>
+  useQuery({
+    queryKey: ['email-availability', email],
+    queryFn: async () =>
+      (
+        await api.get<Availability>('/users/availability', {
+          params: { email },
+        })
+      ).data,
+    // Only query once it looks like a full email address.
+    enabled: /^\S+@\S+\.\S+$/.test(email.trim()),
+    staleTime: 10_000,
+  });

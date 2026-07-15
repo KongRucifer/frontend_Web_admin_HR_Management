@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
+import { Logo } from '@/components/Logo';
 import { navItems } from './nav-items';
 
 export function Sidebar({
@@ -44,9 +45,7 @@ export function Sidebar({
       >
         <div className="flex h-16 items-center justify-between px-5">
           <div className="flex items-center gap-2">
-            <div className="brand-gradient flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white">
-              LTS
-            </div>
+            <Logo className="h-9 w-auto" />
             <div className="leading-tight">
               <div className="text-sm font-semibold">{t('app.title')}</div>
               <div className="text-[11px] opacity-70">{t('app.subtitle')}</div>

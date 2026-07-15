@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { WifiNetwork } from '@/types';
-import { confirmDelete } from './_shared';
+import { ActorCell, confirmDelete } from './_shared';
 
 const empty = { name: '', ssid: '', bssid: '', wifiCode: '', isActive: true };
 
@@ -71,13 +71,15 @@ export function WifiPage() {
                 <TableHead>{t('wifi.ssid')}</TableHead>
                 <TableHead>{t('wifi.bssid')}</TableHead>
                 <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('common.created_by')}</TableHead>
+                <TableHead>{t('common.updated_by')}</TableHead>
                 <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     {t('common.loading')}
                   </TableCell>
                 </TableRow>
@@ -92,6 +94,8 @@ export function WifiPage() {
                       {w.isActive ? t('status.active') : t('status.inactive')}
                     </Badge>
                   </TableCell>
+                  <TableCell><ActorCell actor={w.createdBy} /></TableCell>
+                  <TableCell><ActorCell actor={w.updatedBy} /></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(w)}>
@@ -110,7 +114,7 @@ export function WifiPage() {
               ))}
               {!isLoading && data?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
                   </TableCell>
                 </TableRow>

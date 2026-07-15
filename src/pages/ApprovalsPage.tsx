@@ -3,15 +3,19 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useAddChain,
-  useAddSickPool,
-  useDeleteSickType,
+  useAddEmergencyPool,
+  useDeleteEmergencyType,
+  useDeleteLeaveType,
+  useEmergencyPool,
+  useEmergencyTypes,
   useLeaveChain,
+  useLeaveTypes,
   useRemoveChainApprover,
-  useRemoveSickPool,
+  useRemoveEmergencyPool,
   useReorderChain,
-  useSaveSickType,
-  useSickPool,
-  useSickTypes,
+  useSaveEmergencyType,
+  useSaveLeaveType,
+  type TypeItem,
 } from '@/api/approvals';
 import { ApproverPickerDialog } from '@/components/ApproverPickerDialog';
 import { PageHeader } from '@/components/PageHeader';
@@ -30,25 +34,89 @@ import { Label } from '@/components/ui/label';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 
+/** Reusable "types" section — used by both the leave and emergency cards. */
+function TypeSection({
+  title,
+  items,
+  onAdd,
+  onToggle,
+  onDelete,
+}: {
+  title: string;
+  items: TypeItem[];
+  onAdd: () => void;
+  onToggle: (ty: TypeItem) => void;
+  onDelete: (id: string) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="font-semibold">{title}</div>
+        <Button size="sm" onClick={onAdd}>
+          <Plus className="h-4 w-4" /> {t('approvals.add_type')}
+        </Button>
+      </div>
+      <div className="space-y-2">
+        {items.length === 0 && (
+          <div className="py-3 text-center text-sm text-muted-foreground">
+            {t('common.no_data')}
+          </div>
+        )}
+        {items.map((ty) => (
+          <div
+            key={ty.id}
+            className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
+          >
+            <span className="flex-1 text-sm font-medium">{ty.name}</span>
+            <Badge
+              variant={ty.isActive ? 'success' : 'muted'}
+              className="cursor-pointer"
+              onClick={() => onToggle(ty)}
+            >
+              {ty.isActive ? t('status.active') : t('status.inactive')}
+            </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={async () => {
+                if (await confirm({ title: t('common.confirm_delete'), danger: true }))
+                  onDelete(ty.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export function ApprovalsPage() {
   const { t } = useTranslation();
 
+  // Leave: types + ordered approval chain
+  const leaveTypes = useLeaveTypes();
+  const saveLeaveType = useSaveLeaveType();
+  const delLeaveType = useDeleteLeaveType();
   const chain = useLeaveChain();
   const addChain = useAddChain();
   const reorder = useReorderChain();
   const removeChain = useRemoveChainApprover();
 
-  const types = useSickTypes();
-  const saveType = useSaveSickType();
-  const delType = useDeleteSickType();
-
-  const pool = useSickPool();
-  const addPool = useAddSickPool();
-  const removePool = useRemoveSickPool();
+  // Emergency (ສຸກເສີນ): types + approver pool
+  const emgTypes = useEmergencyTypes();
+  const saveEmgType = useSaveEmergencyType();
+  const delEmgType = useDeleteEmergencyType();
+  const pool = useEmergencyPool();
+  const addPool = useAddEmergencyPool();
+  const removePool = useRemoveEmergencyPool();
 
   const [chainOpen, setChainOpen] = useState(false);
   const [poolOpen, setPoolOpen] = useState(false);
-  const [typeOpen, setTypeOpen] = useState(false);
+  /** Which card's "add type" dialog is open (null = closed). */
+  const [typeDialog, setTypeDialog] = useState<null | 'leave' | 'emergency'>(null);
   const [typeName, setTypeName] = useState('');
 
   const steps = chain.data ?? [];
@@ -63,9 +131,13 @@ export function ApprovalsPage() {
 
   const createType = async (e: React.FormEvent) => {
     e.preventDefault();
-    await saveType.mutateAsync({ name: typeName });
+    if (typeDialog === 'leave') {
+      await saveLeaveType.mutateAsync({ name: typeName });
+    } else {
+      await saveEmgType.mutateAsync({ name: typeName });
+    }
     setTypeName('');
-    setTypeOpen(false);
+    setTypeDialog(null);
     toast.success(t('common.created'));
   };
 
@@ -74,10 +146,22 @@ export function ApprovalsPage() {
       <PageHeader title={t('approvals.title')} />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* ---------- Leave approval chain ---------- */}
+        {/* ---------- LEAVE: types (top) + chain (bottom) ---------- */}
         <Card>
           <CardContent className="p-5">
-            <div className="mb-4 flex items-center justify-between">
+            <TypeSection
+              title={t('approvals.leave_types')}
+              items={leaveTypes.data ?? []}
+              onAdd={() => setTypeDialog('leave')}
+              onToggle={(ty) =>
+                saveLeaveType.mutate({ id: ty.id, isActive: !ty.isActive })
+              }
+              onDelete={(id) => delLeaveType.mutate(id)}
+            />
+
+            <div className="my-4 border-t border-border" />
+
+            <div className="mb-3 flex items-center justify-between">
               <div>
                 <div className="font-semibold">{t('approvals.leave_title')}</div>
                 <div className="text-xs text-muted-foreground">
@@ -90,7 +174,7 @@ export function ApprovalsPage() {
             </div>
 
             {steps.length === 0 ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="py-6 text-center text-sm text-muted-foreground">
                 {t('approvals.no_chain')}
               </div>
             ) : (
@@ -144,59 +228,26 @@ export function ApprovalsPage() {
           </CardContent>
         </Card>
 
-        {/* ---------- Sick: types (top) + pool (bottom) ---------- */}
+        {/* ---------- EMERGENCY (ສຸກເສີນ): types (top) + pool (bottom) ---------- */}
         <Card>
           <CardContent className="p-5">
-            {/* Types */}
-            <div className="mb-3 flex items-center justify-between">
-              <div className="font-semibold">{t('approvals.sick_types')}</div>
-              <Button size="sm" onClick={() => setTypeOpen(true)}>
-                <Plus className="h-4 w-4" /> {t('approvals.add_type')}
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {(types.data ?? []).length === 0 && (
-                <div className="py-3 text-center text-sm text-muted-foreground">
-                  {t('common.no_data')}
-                </div>
-              )}
-              {(types.data ?? []).map((ty) => (
-                <div
-                  key={ty.id}
-                  className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
-                >
-                  <span className="flex-1 text-sm font-medium">{ty.name}</span>
-                  <Badge
-                    variant={ty.isActive ? 'success' : 'muted'}
-                    className="cursor-pointer"
-                    onClick={() =>
-                      saveType.mutate({ id: ty.id, isActive: !ty.isActive })
-                    }
-                  >
-                    {ty.isActive ? t('status.active') : t('status.inactive')}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={async () => {
-                      if (await confirm({ title: t('common.confirm_delete'), danger: true }))
-                        delType.mutate(ty.id);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+            <TypeSection
+              title={t('approvals.emergency_types')}
+              items={emgTypes.data ?? []}
+              onAdd={() => setTypeDialog('emergency')}
+              onToggle={(ty) =>
+                saveEmgType.mutate({ id: ty.id, isActive: !ty.isActive })
+              }
+              onDelete={(id) => delEmgType.mutate(id)}
+            />
 
             <div className="my-4 border-t border-border" />
 
-            {/* Pool */}
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <div className="font-semibold">{t('approvals.sick_pool')}</div>
+                <div className="font-semibold">{t('approvals.emergency_pool')}</div>
                 <div className="text-xs text-muted-foreground">
-                  {t('approvals.sick_pool_hint')}
+                  {t('approvals.emergency_pool_hint')}
                 </div>
               </div>
               <Button size="sm" onClick={() => setPoolOpen(true)}>
@@ -205,7 +256,7 @@ export function ApprovalsPage() {
             </div>
             <div className="space-y-2">
               {(pool.data ?? []).length === 0 && (
-                <div className="py-3 text-center text-sm text-muted-foreground">
+                <div className="py-6 text-center text-sm text-muted-foreground">
                   {t('common.no_data')}
                 </div>
               )}
@@ -261,10 +312,18 @@ export function ApprovalsPage() {
         }}
       />
 
-      <Dialog open={typeOpen} onOpenChange={setTypeOpen}>
+      {/* Add-type dialog (shared by both cards) */}
+      <Dialog
+        open={typeDialog !== null}
+        onOpenChange={(o) => !o && setTypeDialog(null)}
+      >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t('approvals.add_type')}</DialogTitle>
+            <DialogTitle>
+              {typeDialog === 'leave'
+                ? t('approvals.leave_types')
+                : t('approvals.emergency_types')}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={createType} className="space-y-4">
             <div className="space-y-1.5">
@@ -277,10 +336,17 @@ export function ApprovalsPage() {
               />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setTypeOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setTypeDialog(null)}
+              >
                 {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={saveType.isPending}>
+              <Button
+                type="submit"
+                disabled={saveLeaveType.isPending || saveEmgType.isPending}
+              >
                 {t('common.save')}
               </Button>
             </DialogFooter>

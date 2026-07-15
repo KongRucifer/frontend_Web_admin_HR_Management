@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/Logo';
+import { BrandWordmark } from '@/components/BrandWordmark';
 import { LANGS, setLanguage } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -12,7 +15,7 @@ export function LoginPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, login } = useAuthStore();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +27,7 @@ export function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(username, password);
       navigate('/');
     } catch (err: any) {
       setError(err?.apiMessage || t('login.error'));
@@ -63,33 +66,34 @@ export function LoginPage() {
         {/* White form card on top. */}
         <div className="relative z-10 rounded-[2rem] border border-white/50 bg-card p-8 shadow-2xl dark:border-white/10">
           <div className="mb-6 flex flex-col items-center text-center">
-            <div className="brand-gradient mb-3 flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-md">
-              LTS
-            </div>
+            <Logo className="h-16 w-auto" />
+            {/* Wordmark under the logo. */}
+            <BrandWordmark className="mb-4 mt-2" />
             <h1 className="text-xl font-semibold">{t('login.title')}</h1>
-            <p className="text-sm text-muted-foreground">{t('login.subtitle')}</p>
+            {/* <p className="text-sm text-muted-foreground">{t('login.subtitle')}</p> */}
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">{t('login.email')}</Label>
+              <Label htmlFor="username">{t('login.username')}</Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@hrapp.la"
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
+                autoComplete="username"
                 autoFocus
                 required
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">{t('login.password')}</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
               />
             </div>

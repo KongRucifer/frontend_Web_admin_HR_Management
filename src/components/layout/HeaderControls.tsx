@@ -78,17 +78,25 @@ export function HeaderControls({ showLogout = true }: { showLogout?: boolean }) 
         )}
       </Button>
 
-      <div className="hidden text-right sm:block">
-        <div className="text-sm font-medium leading-tight">
-          {user?.username || user?.email}
+      {/* Profile — opens Profile Settings */}
+      <button
+        type="button"
+        onClick={() => navigate('/profile-settings')}
+        title={t('profile_settings.title')}
+        className="flex items-center gap-2 rounded-full p-0.5 pr-0.5 transition-colors hover:bg-accent sm:pl-2"
+      >
+        <div className="hidden text-right sm:block">
+          <div className="text-sm font-medium leading-tight">
+            {user?.username || user?.email}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {t(`roles.${user?.role}`)}
+          </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {t(`roles.${user?.role}`)}
+        <div className="brand-gradient flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white">
+          {(user?.username || user?.email)?.[0]?.toUpperCase()}
         </div>
-      </div>
-      <div className="brand-gradient flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white">
-        {(user?.username || user?.email)?.[0]?.toUpperCase()}
-      </div>
+      </button>
 
       {showLogout && (
         <Button

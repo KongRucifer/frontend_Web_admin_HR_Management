@@ -30,7 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { WorkSchedule } from '@/types';
-import { confirmDelete } from './_shared';
+import { ActorCell, confirmDelete } from './_shared';
 
 const empty = { name: '', startTime: '08:00', endTime: '17:00', lateAfterMinutes: 15 };
 
@@ -84,13 +84,15 @@ export function SchedulesPage() {
                 <TableHead>{t('schedules.end')}</TableHead>
                 <TableHead>{t('schedules.late_after')}</TableHead>
                 <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('common.created_by')}</TableHead>
+                <TableHead>{t('common.updated_by')}</TableHead>
                 <TableHead className="text-right">{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     {t('common.loading')}
                   </TableCell>
                 </TableRow>
@@ -113,6 +115,8 @@ export function SchedulesPage() {
                       </button>
                     )}
                   </TableCell>
+                  <TableCell><ActorCell actor={s.createdBy} /></TableCell>
+                  <TableCell><ActorCell actor={s.updatedBy} /></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
                       <Button variant="ghost" size="icon" onClick={() => openEdit(s)}>
@@ -131,7 +135,7 @@ export function SchedulesPage() {
               ))}
               {!isLoading && data?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
                   </TableCell>
                 </TableRow>

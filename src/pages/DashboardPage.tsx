@@ -29,7 +29,7 @@ export function DashboardPage() {
   const today = useAttendance({ dateFrom: day, dateTo: day, limit: 100 });
 
   const items = today.data?.items ?? [];
-  const present = items.filter((a) => a.status === 'present').length;
+  const present = items.filter((a) => a.status === 'on_time').length;
   const late = items.filter((a) => a.status === 'late').length;
   const checkedOut = items.filter((a) => a.checkOutTime).length;
 

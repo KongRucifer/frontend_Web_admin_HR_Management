@@ -6,7 +6,8 @@ import type { AuthUser } from '@/types';
 interface AuthState {
   user: AuthUser | null;
   ready: boolean; // true once we've checked the session on load
-  login: (email: string, password: string) => Promise<void>;
+  /** Login is by username (email is only used for notifications / OTP). */
+  login: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
 }
@@ -22,8 +23,8 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       ready: false,
 
-      login: async (email, password) => {
-        await api.post('/auth/login', { email, password });
+      login: async (username, password) => {
+        await api.post('/auth/login', { username, password });
         const me = await api.get<AuthUser>('/auth/me');
         // Allow the birthday toast to show again on this fresh login.
         sessionStorage.removeItem('bday-toast-shown');

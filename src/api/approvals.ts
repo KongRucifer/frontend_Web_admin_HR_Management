@@ -18,12 +18,12 @@ export interface ChainStep {
   approverUserId: string;
   approver: ApproverInfo | null;
 }
-export interface SickTypeItem {
+export interface TypeItem {
   id: string;
   name: string;
   isActive: boolean;
 }
-export interface SickPoolItem {
+export interface EmergencyPoolItem {
   id: string;
   approverUserId: string;
   approver: ApproverInfo | null;
@@ -74,54 +74,83 @@ export const useRemoveChainApprover = () => {
   });
 };
 
-// ---- sick types ----
-export const useSickTypes = () =>
+// ---- leave types ----
+export const useLeaveTypes = () =>
   useQuery({
-    queryKey: ['sick-types'],
+    queryKey: ['leave-types'],
     queryFn: async () =>
-      (await api.get<SickTypeItem[]>('/approvals/sick-types')).data,
+      (await api.get<TypeItem[]>('/approvals/leave-types')).data,
   });
 
-export const useSaveSickType = () => {
+export const useSaveLeaveType = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { id?: string; name?: string; isActive?: boolean }) =>
       input.id
-        ? (await api.patch(`/approvals/sick-types/${input.id}`, input)).data
-        : (await api.post('/approvals/sick-types', { name: input.name })).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sick-types'] }),
+        ? (await api.patch(`/approvals/leave-types/${input.id}`, input)).data
+        : (await api.post('/approvals/leave-types', { name: input.name })).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['leave-types'] }),
   });
 };
 
-export const useDeleteSickType = () => {
+export const useDeleteLeaveType = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => api.delete(`/approvals/sick-types/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sick-types'] }),
+    mutationFn: async (id: string) => api.delete(`/approvals/leave-types/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['leave-types'] }),
   });
 };
 
-// ---- sick pool ----
-export const useSickPool = () =>
+// ---- emergency (ສຸກເສີນ) types ----
+export const useEmergencyTypes = () =>
   useQuery({
-    queryKey: ['sick-pool'],
+    queryKey: ['emergency-types'],
     queryFn: async () =>
-      (await api.get<SickPoolItem[]>('/approvals/sick-pool')).data,
+      (await api.get<TypeItem[]>('/approvals/emergency-types')).data,
   });
 
-export const useAddSickPool = () => {
+export const useSaveEmergencyType = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id?: string; name?: string; isActive?: boolean }) =>
+      input.id
+        ? (await api.patch(`/approvals/emergency-types/${input.id}`, input)).data
+        : (await api.post('/approvals/emergency-types', { name: input.name })).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['emergency-types'] }),
+  });
+};
+
+export const useDeleteEmergencyType = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      api.delete(`/approvals/emergency-types/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['emergency-types'] }),
+  });
+};
+
+// ---- emergency approver pool ----
+export const useEmergencyPool = () =>
+  useQuery({
+    queryKey: ['emergency-pool'],
+    queryFn: async () =>
+      (await api.get<EmergencyPoolItem[]>('/approvals/emergency-pool')).data,
+  });
+
+export const useAddEmergencyPool = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (userIds: string[]) =>
-      (await api.post('/approvals/sick-pool', { userIds })).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sick-pool'] }),
+      (await api.post('/approvals/emergency-pool', { userIds })).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['emergency-pool'] }),
   });
 };
 
-export const useRemoveSickPool = () => {
+export const useRemoveEmergencyPool = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => api.delete(`/approvals/sick-pool/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sick-pool'] }),
+    mutationFn: async (id: string) =>
+      api.delete(`/approvals/emergency-pool/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['emergency-pool'] }),
   });
 };

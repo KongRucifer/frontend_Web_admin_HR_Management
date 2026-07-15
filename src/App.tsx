@@ -11,6 +11,7 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { DepartmentsPage } from '@/pages/DepartmentsPage';
 import { EmployeesPage } from '@/pages/EmployeesPage';
 import { LoginPage } from '@/pages/LoginPage';
+import { ProfileSettingsPage } from '@/pages/ProfileSettingsPage';
 import { SchedulesPage } from '@/pages/SchedulesPage';
 import { UsersPage } from '@/pages/UsersPage';
 import { WifiPage } from '@/pages/WifiPage';
@@ -48,6 +49,7 @@ export default function App() {
           <Route path="/schedules" element={<SchedulesPage />} />
           <Route path="/wifi" element={<WifiPage />} />
           <Route path="/users" element={<UsersPage />} />
+          <Route path="/profile-settings" element={<ProfileSettingsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
