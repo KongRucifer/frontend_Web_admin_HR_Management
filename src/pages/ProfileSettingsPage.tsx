@@ -10,6 +10,7 @@ import {
   useUpdateUsername,
 } from '@/api/account';
 import { PageHeader } from '@/components/PageHeader';
+import { ResendOtpButton } from '@/components/ResendOtpButton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -328,9 +329,7 @@ function CreatePasswordModal({
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={send}>
-              {t('profile_settings.resend_otp')}
-            </Button>
+            <ResendOtpButton onResend={send} disabled={confirmOtp.isPending} />
             <Button type="submit" disabled={confirmOtp.isPending}>
               {confirmOtp.isPending ? t('common.saving') : t('common.confirm')}
             </Button>
@@ -356,8 +355,8 @@ function UpdateEmailModal({
   const request = useRequestEmailOtp();
   const confirmOtp = useConfirmEmailOtp();
 
-  const send = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /** Shared by the first send and by "resend", which has no form event. */
+  const doSend = async () => {
     try {
       await request.mutateAsync(newEmail.trim());
       setSent(true);
@@ -365,6 +364,11 @@ function UpdateEmailModal({
     } catch (err: any) {
       toast.error(err?.apiMessage || t('common.error'));
     }
+  };
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await doSend();
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -427,6 +431,9 @@ function UpdateEmailModal({
             <Button type="button" variant="outline" onClick={() => setSent(false)}>
               {t('common.cancel')}
             </Button>
+            {/* Resends to the SAME address the code was sent to: `newEmail` is
+                still held in state, and "Cancel" is what goes back to change it. */}
+            <ResendOtpButton onResend={doSend} disabled={confirmOtp.isPending} />
             <Button type="submit" disabled={confirmOtp.isPending}>
               {confirmOtp.isPending ? t('common.saving') : t('common.confirm')}
             </Button>

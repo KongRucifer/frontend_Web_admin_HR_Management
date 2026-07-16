@@ -200,6 +200,8 @@ export interface AttendanceQuery {
   // A partial-day emergency keeps status 'on_time', so status=emergency
   // would miss it — use `kind` for leave/emergency filtering.
   kind?: RequestKind;
+  // Days checked out before the schedule's end time.
+  leftEarly?: boolean;
 }
 
 export const useAttendance = (query: AttendanceQuery) =>

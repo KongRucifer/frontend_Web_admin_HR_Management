@@ -103,6 +103,9 @@ export interface Attendance {
   checkInLocation: string | null;
   checkOutLocation: string | null;
   status: AttendanceStatus;
+  // Checked out before the schedule's end time. Separate from status so a day
+  // can be both "late" and "left early".
+  leftEarly: boolean;
   workHours: number | null;
   note: string | null;
   // Set when the day is covered by an approved leave / emergency request.

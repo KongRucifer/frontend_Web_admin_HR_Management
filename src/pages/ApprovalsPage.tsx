@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Plus, Trash2, UserPlus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -39,12 +39,14 @@ function TypeSection({
   title,
   items,
   onAdd,
+  onEdit,
   onToggle,
   onDelete,
 }: {
   title: string;
   items: TypeItem[];
   onAdd: () => void;
+  onEdit: (ty: TypeItem) => void;
   onToggle: (ty: TypeItem) => void;
   onDelete: (id: string) => void;
 }) {
@@ -68,7 +70,21 @@ function TypeSection({
             key={ty.id}
             className="flex items-center gap-2 rounded-lg border border-border px-3 py-2"
           >
-            <span className="flex-1 text-sm font-medium">{ty.name}</span>
+            {/* Both names at once: this is the screen where an admin fixes a
+                type whose Lao name is missing, so hiding one would hide the
+                very thing they came to check. */}
+            <span className="flex-1 text-sm font-medium">
+              {ty.name}
+              {ty.laoName ? (
+                <span className="ml-2 font-normal text-muted-foreground">
+                  · {ty.laoName}
+                </span>
+              ) : (
+                <span className="ml-2 text-xs font-normal text-amber-600 dark:text-amber-500">
+                  · {t('approvals.no_lao_name')}
+                </span>
+              )}
+            </span>
             <Badge
               variant={ty.isActive ? 'success' : 'muted'}
               className="cursor-pointer"
@@ -76,6 +92,14 @@ function TypeSection({
             >
               {ty.isActive ? t('status.active') : t('status.inactive')}
             </Badge>
+            <Button
+              variant="ghost"
+              size="icon"
+              title={t('common.edit')}
+              onClick={() => onEdit(ty)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -118,6 +142,23 @@ export function ApprovalsPage() {
   /** Which card's "add type" dialog is open (null = closed). */
   const [typeDialog, setTypeDialog] = useState<null | 'leave' | 'emergency'>(null);
   const [typeName, setTypeName] = useState('');
+  const [typeLaoName, setTypeLaoName] = useState('');
+  /** The type being edited; null means the dialog is creating a new one. */
+  const [editingType, setEditingType] = useState<TypeItem | null>(null);
+
+  const openCreateType = (kind: 'leave' | 'emergency') => {
+    setEditingType(null);
+    setTypeName('');
+    setTypeLaoName('');
+    setTypeDialog(kind);
+  };
+
+  const openEditType = (kind: 'leave' | 'emergency', ty: TypeItem) => {
+    setEditingType(ty);
+    setTypeName(ty.name);
+    setTypeLaoName(ty.laoName ?? '');
+    setTypeDialog(kind);
+  };
 
   const steps = chain.data ?? [];
 
@@ -129,16 +170,25 @@ export function ApprovalsPage() {
     await reorder.mutateAsync(order);
   };
 
-  const createType = async (e: React.FormEvent) => {
+  const saveType = async (e: React.FormEvent) => {
     e.preventDefault();
+    // `id` is what makes the hook PATCH instead of POST — the same form serves
+    // both, so a rename can never drift from a create.
+    const input = {
+      ...(editingType && { id: editingType.id }),
+      name: typeName.trim(),
+      laoName: typeLaoName.trim(),
+    };
     if (typeDialog === 'leave') {
-      await saveLeaveType.mutateAsync({ name: typeName });
+      await saveLeaveType.mutateAsync(input);
     } else {
-      await saveEmgType.mutateAsync({ name: typeName });
+      await saveEmgType.mutateAsync(input);
     }
     setTypeName('');
+    setTypeLaoName('');
     setTypeDialog(null);
-    toast.success(t('common.created'));
+    toast.success(editingType ? t('common.updated') : t('common.created'));
+    setEditingType(null);
   };
 
   return (
@@ -152,7 +202,8 @@ export function ApprovalsPage() {
             <TypeSection
               title={t('approvals.leave_types')}
               items={leaveTypes.data ?? []}
-              onAdd={() => setTypeDialog('leave')}
+              onAdd={() => openCreateType('leave')}
+              onEdit={(ty) => openEditType('leave', ty)}
               onToggle={(ty) =>
                 saveLeaveType.mutate({ id: ty.id, isActive: !ty.isActive })
               }
@@ -234,7 +285,8 @@ export function ApprovalsPage() {
             <TypeSection
               title={t('approvals.emergency_types')}
               items={emgTypes.data ?? []}
-              onAdd={() => setTypeDialog('emergency')}
+              onAdd={() => openCreateType('emergency')}
+              onEdit={(ty) => openEditType('emergency', ty)}
               onToggle={(ty) =>
                 saveEmgType.mutate({ id: ty.id, isActive: !ty.isActive })
               }
@@ -312,20 +364,28 @@ export function ApprovalsPage() {
         }}
       />
 
-      {/* Add-type dialog (shared by both cards) */}
+      {/* Add / edit type dialog (shared by both cards) */}
       <Dialog
         open={typeDialog !== null}
-        onOpenChange={(o) => !o && setTypeDialog(null)}
+        onOpenChange={(o) => {
+          if (o) return;
+          setTypeDialog(null);
+          // Drop the edit target too: reopening via "Add" would otherwise carry
+          // the last edited id and silently rename that type instead.
+          setEditingType(null);
+        }}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {typeDialog === 'leave'
-                ? t('approvals.leave_types')
-                : t('approvals.emergency_types')}
+              {`${editingType ? t('common.edit') : t('approvals.add_type')} · ${
+                typeDialog === 'leave'
+                  ? t('approvals.leave_types')
+                  : t('approvals.emergency_types')
+              }`}
             </DialogTitle>
           </DialogHeader>
-          <form onSubmit={createType} className="space-y-4">
+          <form onSubmit={saveType} className="space-y-4">
             <div className="space-y-1.5">
               <Label>{t('approvals.type_name')}</Label>
               <Input
@@ -334,6 +394,16 @@ export function ApprovalsPage() {
                 required
                 autoFocus
               />
+            </div>
+            <div className="space-y-1.5">
+              <Label>{t('approvals.type_lao_name')}</Label>
+              <Input
+                value={typeLaoName}
+                onChange={(e) => setTypeLaoName(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t('approvals.type_lao_hint')}
+              </p>
             </div>
             <DialogFooter>
               <Button

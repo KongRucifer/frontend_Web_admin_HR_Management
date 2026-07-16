@@ -18,10 +18,20 @@ import {
 } from '@/components/ui/table';
 import { formatDate, formatTime } from '@/lib/utils';
 import type { AttendanceStatus, RequestKind } from '@/types';
-import { Pagination, RequestTypeBadge, StatusBadge } from './_shared';
+import {
+  LeftEarlyBadge,
+  Pagination,
+  RequestTypeBadge,
+  StatusBadge,
+} from './_shared';
 
-/** '' = no filter. leave/emergency filter by request kind, the rest by status. */
-type StatusFilter = '' | AttendanceStatus;
+/**
+ * One dropdown, three kinds of server filter:
+ *   on_time/late/absent -> status=
+ *   leave/emergency     -> kind=       (FK-based; status would miss partial days)
+ *   left_early          -> leftEarly=  (its own column, not a status)
+ */
+type StatusFilter = '' | AttendanceStatus | 'left_early';
 
 export function AttendancePage() {
   const { t } = useTranslation();
@@ -37,6 +47,7 @@ export function AttendancePage() {
   // leave/emergency must go through `kind` (FK-based): a partial-day emergency
   // keeps status 'on_time', so filtering it by status would find nothing.
   const isKind = status === 'leave' || status === 'emergency';
+  const isLeftEarly = status === 'left_early';
 
   const { data, isLoading } = useAttendance({
     page,
@@ -44,8 +55,9 @@ export function AttendancePage() {
     search: debouncedSearch || undefined,
     dateFrom: dateFrom || undefined,
     dateTo: dateTo || undefined,
-    status: isKind ? undefined : (status || undefined),
+    status: isKind || isLeftEarly ? undefined : (status || undefined),
     kind: isKind ? (status as RequestKind) : undefined,
+    leftEarly: isLeftEarly ? true : undefined,
   });
 
   return (
@@ -75,7 +87,7 @@ export function AttendancePage() {
             <SelectField
               value={status || 'all'}
               onValueChange={(v) => {
-                setStatus(v === 'all' ? '' : (v as AttendanceStatus));
+                setStatus(v === 'all' ? '' : (v as StatusFilter));
                 setPage(1);
               }}
               placeholder={t('common.all')}
@@ -86,6 +98,7 @@ export function AttendancePage() {
                 { value: 'absent', label: t('status.absent') },
                 { value: 'leave', label: t('status.leave') },
                 { value: 'emergency', label: t('status.emergency') },
+                { value: 'left_early', label: t('status.left_early') },
               ]}
             />
           </div>
@@ -139,7 +152,12 @@ export function AttendancePage() {
                   <TableCell>{formatTime(a.checkInTime)}</TableCell>
                   <TableCell>{formatTime(a.checkOutTime)}</TableCell>
                   <TableCell>{a.workHours ?? '-'}</TableCell>
-                  <TableCell><StatusBadge status={a.status} /></TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <StatusBadge status={a.status} />
+                      <LeftEarlyBadge leftEarly={a.leftEarly} />
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

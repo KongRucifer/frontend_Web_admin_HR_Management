@@ -20,7 +20,10 @@ export interface ChainStep {
 }
 export interface TypeItem {
   id: string;
+  /** English name — also the fallback when laoName was never filled in. */
   name: string;
+  /** Lao name, shown while the UI is in Lao. Null on types predating it. */
+  laoName: string | null;
   isActive: boolean;
 }
 export interface EmergencyPoolItem {
@@ -85,10 +88,20 @@ export const useLeaveTypes = () =>
 export const useSaveLeaveType = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id?: string; name?: string; isActive?: boolean }) =>
+    mutationFn: async (input: {
+      id?: string;
+      name?: string;
+      laoName?: string;
+      isActive?: boolean;
+    }) =>
       input.id
         ? (await api.patch(`/approvals/leave-types/${input.id}`, input)).data
-        : (await api.post('/approvals/leave-types', { name: input.name })).data,
+        : (
+            await api.post('/approvals/leave-types', {
+              name: input.name,
+              laoName: input.laoName,
+            })
+          ).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['leave-types'] }),
   });
 };
@@ -112,10 +125,20 @@ export const useEmergencyTypes = () =>
 export const useSaveEmergencyType = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id?: string; name?: string; isActive?: boolean }) =>
+    mutationFn: async (input: {
+      id?: string;
+      name?: string;
+      laoName?: string;
+      isActive?: boolean;
+    }) =>
       input.id
         ? (await api.patch(`/approvals/emergency-types/${input.id}`, input)).data
-        : (await api.post('/approvals/emergency-types', { name: input.name })).data,
+        : (
+            await api.post('/approvals/emergency-types', {
+              name: input.name,
+              laoName: input.laoName,
+            })
+          ).data,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['emergency-types'] }),
   });
 };

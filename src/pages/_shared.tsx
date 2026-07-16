@@ -44,6 +44,13 @@ export function StatusBadge({ status }: { status: AttendanceStatus }) {
   return <Badge variant={statusVariant[status]}>{t(`status.${status}`)}</Badge>;
 }
 
+/** Marks a day whose check-out was before the schedule's end time. */
+export function LeftEarlyBadge({ leftEarly }: { leftEarly?: boolean }) {
+  const { t } = useTranslation();
+  if (!leftEarly) return null;
+  return <Badge variant="warning">{t('status.left_early')}</Badge>;
+}
+
 /**
  * Small badge shown beside the Date cell when the day is covered by an approved
  * request. Renders the request's type name ("Annual leave", "Illness"), falling
