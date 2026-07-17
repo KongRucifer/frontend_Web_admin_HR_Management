@@ -29,6 +29,25 @@ export function formatDate(value?: string | null): string {
   });
 }
 
+/**
+ * Decimal hours -> "X hr Y min" (localised units), so 0.21 reads as "12 min"
+ * and 8.5 as "8 hr 30 min". Whole hours drop the minutes; under an hour drops
+ * the hours. Pass the unit words so this stays i18n-free.
+ */
+export function formatHoursMinutes(
+  hours: number | null | undefined,
+  hr: string,
+  min: string,
+): string {
+  if (hours == null) return '-';
+  const totalMin = Math.round(hours * 60);
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (h && m) return `${h} ${hr} ${m} ${min}`;
+  if (h) return `${h} ${hr}`;
+  return `${m} ${min}`;
+}
+
 export function formatTime(value?: string | null): string {
   if (!value) return '-';
   return new Date(value).toLocaleTimeString('en-GB', {

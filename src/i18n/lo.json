@@ -1,6 +1,12 @@
 {
-  "app": { "title": "ລະບົບ LTS Ventures", "subtitle": "ລະບົບ ເຂົ້າ-ອອກ ວຽກ" },
-  "layout": { "toggle": "ສະຫຼັບ layout (header / sidebar)", "theme": "ໂໝດມືດ / ສະຫວ່າງ" },
+  "app": {
+    "title": "ລະບົບ LTS Ventures",
+    "subtitle": "ລະບົບ ເຂົ້າ-ອອກ ວຽກ"
+  },
+  "layout": {
+    "toggle": "ສະຫຼັບ layout (header / sidebar)",
+    "theme": "ໂໝດມືດ / ສະຫວ່າງ"
+  },
   "nav": {
     "dashboard": "ໜ້າຫຼັກ",
     "attendance": "ການເຂົ້າ-ອອກ",
@@ -11,7 +17,42 @@
     "schedules": "ຕາຕະລາງເຮັດວຽກ",
     "wifi": "ເຄືອຂ່າຍ WiFi",
     "users": "ຜູ້ໃຊ້ລະບົບ",
-    "logout": "ອອກຈາກລະບົບ"
+    "logout": "ອອກຈາກລະບົບ",
+    "officeLocations": "ຕຳແໜ່ງຫ້ອງການ",
+    "notifications": "ແຈ້ງເຕືອນ",
+    "settings": "ຕັ້ງຄ່າ"
+  },
+  "settings": {
+    "wfh": {
+      "title": "ເຮັດວຽກຢູ່ເຮືອນ (ຂ້າມ GPS)",
+      "hint": "ພະນັກງານທີ່ເລືອກ ສາມາດ check in/out ຈາກບ່ອນໃດກໍໄດ້ໃນວັນທີ່ນີ້ ໂດຍບໍ່ຕ້ອງຜ່ານການກວດ GPS ຂອງຫ້ອງການ.",
+      "date": "ວັນທີ",
+      "search_placeholder": "ຄົ້ນຫາພະນັກງານ…",
+      "select_all": "ເລືອກທັງໝົດ",
+      "selected_count": "ເລືອກແລ້ວ {{count}}",
+      "grant": "ອະນຸຍາດເຮັດວຽກຢູ່ເຮືອນ",
+      "granted": "ອະນຸຍາດແລ້ວ {{count}} ຄົນ",
+      "granted_on": "ອະນຸຍາດໃນ {{date}}",
+      "none_granted": "ຍັງບໍ່ມີໃຜຖືກອະນຸຍາດໃຫ້ເຮັດວຽກຢູ່ເຮືອນໃນວັນທີ່ນີ້",
+      "already": "ອະນຸຍາດແລ້ວ",
+      "confirm_title": "ອະນຸຍາດເຮັດວຽກຢູ່ເຮືອນ?",
+      "confirm_msg": "ອະນຸຍາດ {{count}} ຄົນ ໃຫ້ check in/out ໂດຍບໍ່ຕ້ອງໃຊ້ GPS ໃນ {{date}}?",
+      "revoke_title": "ຍົກເລີກສິດ ເຮັດວຽກຢູ່ເຮືອນ?",
+      "revoke": "ລຶບ",
+      "scheduled": "ວັນທີ່ອະນຸຍາດເຮັດວຽກຢູ່ເຮືອນ",
+      "no_scheduled": "ຍັງບໍ່ໄດ້ຕັ້ງວັນເຮັດວຽກຢູ່ເຮືອນ",
+      "people_count": "{{count}} ຄົນ"
+    }
+  },
+  "notifications": {
+    "title": "ແຈ້ງເຕືອນ",
+    "unread": "ຍັງບໍ່ອ່ານ",
+    "read": "ອ່ານແລ້ວ",
+    "none_unread": "ບໍ່ມີແຈ້ງເຕືອນໃໝ່",
+    "view_all": "ເບິ່ງທັງໝົດ",
+    "mark_all_read": "ອ່ານທັງໝົດ",
+    "all_read": "ໝາຍວ່າອ່ານແລ້ວທັງໝົດ",
+    "unread_count": "ຍັງບໍ່ອ່ານ {{count}}"
   },
   "login": {
     "title": "ເຂົ້າສູ່ລະບົບ",
@@ -44,7 +85,19 @@
     "deleted": "ລຶບສຳເລັດ",
     "error": "ມີບັນຫາ ລອງໃໝ່ອີກຄັ້ງ",
     "created_by": "ສ້າງໂດຍ",
-    "updated_by": "ແກ້ໄຂໂດຍ"
+    "updated_by": "ແກ້ໄຂໂດຍ",
+    "hrUnit": "ຊມ",
+    "minUnit": "ນທ",
+    "show": "ສະແດງ",
+    "active_items": "ລາຍການທີ່ຍັງໃຊ້ງານ",
+    "deleted_items": "ລາຍການທີ່ຖືກລົບແລ້ວ",
+    "errors": {
+      "invalid_credentials": "ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ",
+      "account_disabled": "ບັນຊີນີ້ຖືກປິດການໃຊ້ງານ",
+      "account_deleted": "ບັນຊີນີ້ຖືກລົບແລ້ວ",
+      "admin_only": "ບັນຊີນີ້ບໍ່ມີສິດເຂົ້າລະບົບຜູ້ດູແລ (ສະເພາະ admin ເທົ່ານັ້ນ)",
+      "employee_only": "ບັນຊີ admin ບໍ່ສາມາດເຂົ້າລະບົບພະນັກງານໄດ້"
+    }
   },
   "dashboard": {
     "welcome": "ຍິນດີຕ້ອນຮັບ",
@@ -90,6 +143,7 @@
     "schedule": "ຕາຕະລາງ",
     "status": "ສະຖານະ",
     "birth_date": "ວັນເກີດ",
+    "contract_end": "ວັນສັນຍາໝົດ",
     "create_account": "ສ້າງບັນຊີເຂົ້າລະບົບ",
     "account_section": "ບັນຊີເຂົ້າລະບົບ",
     "account_hint": "ພະນັກງານເຂົ້າລະບົບດ້ວຍ ຊື່ຜູ້ໃຊ້ + ລະຫັດຜ່ານ ນີ້.",
@@ -105,7 +159,14 @@
     "account_use_existing": "ໃຊ້ບັນຊີທີ່ມີຢູ່",
     "account_select_existing": "ເລືອກບັນຊີທີ່ມີຢູ່",
     "account_existing_hint": "ບັນຊີນີ້ຈະຖືກຜູກກັບພະນັກງານໃໝ່.",
-    "no_linkable": "ບໍ່ມີບັນຊີໃຫ້ເລືອກຜູກ."
+    "no_linkable": "ບໍ່ມີບັນຊີໃຫ້ເລືອກຜູກ.",
+    "username": "ຊື່ຜູ້ໃຊ້",
+    "search_placeholder": "ຄົ້ນຫາ ຊື່, ລະຫັດ ຫຼື ຊື່ຜູ້ໃຊ້",
+    "restore": "ກູ້ຄືນ",
+    "restored": "ກູ້ຄືນສຳເລັດ",
+    "restore_hint": "ພະນັກງານນີ້ຈະກັບມາໃຊ້ງານໄດ້ອີກຄັ້ງ",
+    "hard_delete": "ລົບຖາວອນ",
+    "hard_delete_hint": "ຈະລົບຖາວອນ ບໍ່ສາມາດກູ້ຄືນໄດ້"
   },
   "birthdays": {
     "title": "ວັນເກີດ",
@@ -122,8 +183,18 @@
     "view_all": "ເບິ່ງທັງໝົດ",
     "toast_title": "ມື້ນີ້ວັນເກີດ!"
   },
-  "departments": { "title": "ພະແນກ", "name": "ຊື່ພະແນກ", "new": "ພະແນກໃໝ່" },
-  "positions": { "title": "ຕຳແໜ່ງ", "name": "ຊື່ຕຳແໜ່ງ", "department": "ພະແນກ", "new": "ຕຳແໜ່ງໃໝ່", "select": "ເລືອກຕຳແໜ່ງ" },
+  "departments": {
+    "title": "ພະແນກ",
+    "name": "ຊື່ພະແນກ",
+    "new": "ພະແນກໃໝ່"
+  },
+  "positions": {
+    "title": "ຕຳແໜ່ງ",
+    "name": "ຊື່ຕຳແໜ່ງ",
+    "department": "ພະແນກ",
+    "new": "ຕຳແໜ່ງໃໝ່",
+    "select": "ເລືອກຕຳແໜ່ງ"
+  },
   "schedules": {
     "title": "ຕາຕະລາງເຮັດວຽກ",
     "name": "ຊື່ກະ",
@@ -163,7 +234,13 @@
     "email_available": "ອີເມວນີ້ໃຊ້ໄດ້",
     "email_taken": "ອີເມວນີ້ຖືກລົງທະບຽນແລ້ວ",
     "current_password": "ລະຫັດຜ່ານປັດຈຸບັນ",
-    "new_password": "ລະຫັດຜ່ານໃໝ່"
+    "new_password": "ລະຫັດຜ່ານໃໝ່",
+    "search_placeholder": "ຄົ້ນຫາ ຊື່ຜູ້ໃຊ້ ຫຼື ອີເມວ",
+    "restore": "ກູ້ຄືນ",
+    "restored": "ກູ້ຄືນສຳເລັດ",
+    "restore_hint": "ບັນຊີນີ້ຈະກັບມາໃຊ້ງານໄດ້ອີກຄັ້ງ",
+    "hard_delete": "ລົບຖາວອນ",
+    "hard_delete_hint": "ຈະລົບຖາວອນ ບໍ່ສາມາດກູ້ຄືນໄດ້"
   },
   "profile_settings": {
     "title": "ຕັ້ງຄ່າໂປຣໄຟລ໌",
@@ -203,5 +280,22 @@
     "selected": "ເລືອກແລ້ວ",
     "create": "ສ້າງ"
   },
-  "roles": { "admin": "ຜູ້ຄຸ້ມຄອງ", "employee": "ພະນັກງານ" }
+  "roles": {
+    "admin": "ຜູ້ຄຸ້ມຄອງ",
+    "employee": "ພະນັກງານ"
+  },
+  "officeLocations": {
+    "title": "ຕຳແໜ່ງຫ້ອງການ (GPS)",
+    "new": "ເພີ່ມຕຳແໜ່ງ",
+    "name": "ຊື່",
+    "coordinates": "ພິກັດ",
+    "latitude": "ລະຕິຈູດ",
+    "longitude": "ລອງຈິຈູດ",
+    "radius": "ລັດສະໝີ",
+    "active": "ໃຊ້ງານ",
+    "useMyLocation": "ໃຊ້ຕຳແໜ່ງປັດຈຸບັນຂອງຂ້ອຍ",
+    "geoUnsupported": "browser ນີ້ບໍ່ຮອງຮັບຕຳແໜ່ງ",
+    "geoDenied": "ດຶງຕຳແໜ່ງບໍ່ໄດ້",
+    "coordsRequired": "ກະລຸນາໃສ່ ລະຕິຈູດ ແລະ ລອງຈິຈູດ (ຫຼື ກົດ \"ໃຊ້ຕຳແໜ່ງປັດຈຸບັນ\")"
+  }
 }

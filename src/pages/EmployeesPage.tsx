@@ -1,11 +1,13 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useDeleteEmployee,
   useDepartments,
   useEmployees,
+  useHardDeleteEmployee,
   usePositions,
+  useRestoreEmployee,
   useSaveEmployee,
   useUsers,
 } from '@/api/hooks';
@@ -54,6 +56,7 @@ const emptyForm = {
   departmentId: '',
   positionId: '',
   birthDate: '',
+  contractEndDate: '',
   status: 'active',
   username: '',
   password: '',
@@ -65,6 +68,8 @@ export function EmployeesPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [departmentId, setDepartmentId] = useState('');
+  // Active list vs the soft-deleted bin.
+  const [view, setView] = useState<'active' | 'deleted'>('active');
 
   // Only fetch once the user stops typing (waits 400ms).
   const debouncedSearch = useDebounce(search, 400);
@@ -74,12 +79,17 @@ export function EmployeesPage() {
     limit: 10,
     search: debouncedSearch || undefined,
     departmentId: departmentId || undefined,
+    deleted: view === 'deleted' ? 'true' : undefined,
   });
   const departments = useDepartments();
   const positions = usePositions();
-  const users = useUsers();
+  // Enough to cover the linkable-account picker (the list is paginated now).
+  const users = useUsers({ limit: 100 });
   const save = useSaveEmployee();
   const del = useDeleteEmployee();
+  const restore = useRestoreEmployee();
+  const hardDel = useHardDeleteEmployee();
+  const deletedView = view === 'deleted';
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Employee | null>(null);
@@ -89,7 +99,7 @@ export function EmployeesPage() {
 
   // Existing accounts that can be linked: employee-role accounts not yet
   // attached to any employee.
-  const linkableUsers = (users.data ?? []).filter(
+  const linkableUsers = (users.data?.items ?? []).filter(
     (u) => !u.employeeId && u.role === 'employee',
   );
 
@@ -112,6 +122,7 @@ export function EmployeesPage() {
       // The API returns '1998-05-20T00:00:00.000Z'; the form (and the DatePicker)
       // work in 'YYYY-MM-DD', which is also what gets POSTed back on save.
       birthDate: e.birthDate?.slice(0, 10) ?? '',
+      contractEndDate: e.contractEndDate?.slice(0, 10) ?? '',
       status: e.status,
     });
     setOpen(true);
@@ -186,6 +197,7 @@ export function EmployeesPage() {
       departmentId: form.departmentId || undefined,
       positionId: form.positionId || undefined,
       birthDate: form.birthDate || undefined,
+      contractEndDate: form.contractEndDate || undefined,
       status: editing ? form.status : 'active',
     };
     if (!editing) {
@@ -210,6 +222,56 @@ export function EmployeesPage() {
     }
   };
 
+  const onDelete = async (e: Employee) => {
+    if (
+      await confirm({
+        title: t('common.confirm_delete'),
+        message: t('employees.delete_hint'),
+        danger: true,
+      })
+    ) {
+      try {
+        await del.mutateAsync(e.id);
+        toast.success(t('common.deleted'));
+      } catch (err: any) {
+        toast.error(err?.apiMessage || t('common.error'));
+      }
+    }
+  };
+
+  const onRestore = async (e: Employee) => {
+    if (
+      await confirm({
+        title: t('employees.restore'),
+        message: `${e.firstName} ${e.lastName} — ${t('employees.restore_hint')}`,
+      })
+    ) {
+      try {
+        await restore.mutateAsync(e.id);
+        toast.success(t('employees.restored'));
+      } catch (err: any) {
+        toast.error(err?.apiMessage || t('common.error'));
+      }
+    }
+  };
+
+  const onHardDelete = async (e: Employee) => {
+    if (
+      await confirm({
+        title: t('employees.hard_delete'),
+        message: `${e.firstName} ${e.lastName} — ${t('employees.hard_delete_hint')}`,
+        danger: true,
+      })
+    ) {
+      try {
+        await hardDel.mutateAsync(e.id);
+        toast.success(t('common.deleted'));
+      } catch (err: any) {
+        toast.error(err?.apiMessage || t('common.error'));
+      }
+    }
+  };
+
   return (
     <div>
       <PageHeader title={t('employees.title')}>
@@ -221,7 +283,7 @@ export function EmployeesPage() {
       <Card className="mb-4">
         <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
           <Input
-            placeholder={t('common.search')}
+            placeholder={t('employees.search_placeholder')}
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
@@ -234,6 +296,14 @@ export function EmployeesPage() {
               ...(departments.data?.map((d) => ({ value: d.id, label: d.name })) ?? []),
             ]}
           />
+          <SelectField
+            value={view}
+            onValueChange={(v) => { setView(v as 'active' | 'deleted'); setPage(1); }}
+            options={[
+              { value: 'active', label: t('common.active_items') },
+              { value: 'deleted', label: t('common.deleted_items') },
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -244,9 +314,11 @@ export function EmployeesPage() {
               <TableRow>
                 <TableHead>{t('employees.code')}</TableHead>
                 <TableHead>{t('employees.name')}</TableHead>
+                <TableHead>{t('employees.username')}</TableHead>
                 <TableHead>{t('employees.department')}</TableHead>
                 <TableHead>{t('employees.position')}</TableHead>
                 <TableHead>{t('employees.birth_date')}</TableHead>
+                <TableHead>{t('employees.contract_end')}</TableHead>
                 <TableHead>{t('employees.status')}</TableHead>
                 <TableHead>{t('common.created_by')}</TableHead>
                 <TableHead>{t('common.updated_by')}</TableHead>
@@ -256,7 +328,7 @@ export function EmployeesPage() {
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                     {t('common.loading')}
                   </TableCell>
                 </TableRow>
@@ -265,9 +337,11 @@ export function EmployeesPage() {
                 <TableRow key={e.id}>
                   <TableCell className="font-mono text-xs">{e.employeeCode}</TableCell>
                   <TableCell className="font-medium">{e.firstName} {e.lastName}</TableCell>
+                  <TableCell className="text-muted-foreground">{e.account?.username ?? '-'}</TableCell>
                   <TableCell>{e.department?.name ?? '-'}</TableCell>
                   <TableCell>{e.positionRef?.name ?? '-'}</TableCell>
                   <TableCell>{formatDate(e.birthDate)}</TableCell>
+                  <TableCell>{formatDate(e.contractEndDate)}</TableCell>
                   <TableCell>
                     <Badge variant={e.status === 'active' ? 'success' : 'muted'}>
                       {t(`status.${e.status}`)}
@@ -277,38 +351,32 @@ export function EmployeesPage() {
                   <TableCell><ActorCell actor={e.updatedBy} /></TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(e)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={async () => {
-                          if (
-                            await confirm({
-                              title: t('common.confirm_delete'),
-                              message: t('employees.delete_hint'),
-                              danger: true,
-                            })
-                          ) {
-                            try {
-                              await del.mutateAsync(e.id);
-                              toast.success(t('common.deleted'));
-                            } catch (err: any) {
-                              toast.error(err?.apiMessage || t('common.error'));
-                            }
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      {!deletedView ? (
+                        <>
+                          <Button variant="ghost" size="icon" title={t('common.edit')} onClick={() => openEdit(e)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title={t('common.delete')} onClick={() => onDelete(e)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="ghost" size="icon" title={t('employees.restore')} onClick={() => onRestore(e)}>
+                            <RotateCcw className="h-4 w-4 text-primary" />
+                          </Button>
+                          <Button variant="ghost" size="icon" title={t('employees.hard_delete')} onClick={() => onHardDelete(e)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
               {!isLoading && (data?.items.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
                   </TableCell>
                 </TableRow>
@@ -364,6 +432,13 @@ export function EmployeesPage() {
               <div className="space-y-1.5">
                 <Label>{t('employees.birth_date')}</Label>
                 <DatePicker value={form.birthDate} onChange={(v) => setForm({ ...form, birthDate: v })} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>{t('employees.contract_end')}</Label>
+                <DatePicker
+                  value={form.contractEndDate}
+                  onChange={(v) => setForm({ ...form, contractEndDate: v })}
+                />
               </div>
               {editing && (
                 <div className="space-y-1.5">

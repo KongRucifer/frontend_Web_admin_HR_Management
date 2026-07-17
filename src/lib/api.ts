@@ -7,6 +7,10 @@ import axios from 'axios';
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   withCredentials: true,
+  // Identifies this as the admin panel so the backend stores/reads its JWT under
+  // a separate cookie (access_token_admin) — independent of the employee web's
+  // session on the same host.
+  headers: { 'X-App': 'admin' },
 });
 
 // The backend wraps success responses as { success, data }. Unwrap to data.

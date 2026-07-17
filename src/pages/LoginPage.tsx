@@ -30,7 +30,10 @@ export function LoginPage() {
       await login(username, password);
       navigate('/');
     } catch (err: any) {
-      setError(err?.apiMessage || t('login.error'));
+      // The backend returns a message key (e.g. "common.errors.admin_only");
+      // translate it, falling back to the raw text / a generic message.
+      const key = err?.apiMessage;
+      setError(key ? t(key, { defaultValue: key }) : t('login.error'));
     } finally {
       setLoading(false);
     }
@@ -81,7 +84,6 @@ export function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="admin"
                 autoComplete="username"
                 autoFocus
                 required

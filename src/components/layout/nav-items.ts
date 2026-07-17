@@ -1,13 +1,13 @@
 import {
+  Bell,
   Building2,
   Cake,
-  CalendarClock,
   ClipboardCheck,
   ClipboardList,
   LayoutDashboard,
+  Settings,
   UserCog,
   Users,
-  Wifi,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export const navItems: NavItem[] = [
   { to: '/birthdays', key: 'birthdays', icon: Cake },
   { to: '/employees', key: 'employees', icon: Users },
   { to: '/departments', key: 'departments', icon: Building2 },
-  { to: '/schedules', key: 'schedules', icon: CalendarClock },
-  { to: '/wifi', key: 'wifi', icon: Wifi },
   { to: '/users', key: 'users', icon: UserCog },
+  { to: '/notifications', key: 'notifications', icon: Bell },
+  { to: '/settings', key: 'settings', icon: Settings },
 ];

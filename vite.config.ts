@@ -24,6 +24,13 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:3000',
           changeOrigin: true,
         },
+        // Real-time notifications (socket.io). Proxied same-origin so the
+        // handshake carries the httpOnly admin cookie; ws:true upgrades it.
+        '/socket.io': {
+          target: env.VITE_API_PROXY_TARGET || 'http://127.0.0.1:3000',
+          changeOrigin: true,
+          ws: true,
+        },
       },
     },
   };

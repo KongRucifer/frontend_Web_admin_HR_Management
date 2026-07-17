@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatDate, formatTime } from '@/lib/utils';
+import { formatDate, formatHoursMinutes, formatTime } from '@/lib/utils';
 import type { AttendanceStatus, RequestKind } from '@/types';
 import {
   LeftEarlyBadge,
@@ -151,7 +151,9 @@ export function AttendancePage() {
                   </TableCell>
                   <TableCell>{formatTime(a.checkInTime)}</TableCell>
                   <TableCell>{formatTime(a.checkOutTime)}</TableCell>
-                  <TableCell>{a.workHours ?? '-'}</TableCell>
+                  <TableCell>
+                    {formatHoursMinutes(a.workHours, t('common.hrUnit'), t('common.minUnit'))}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap items-center gap-1">
                       <StatusBadge status={a.status} />

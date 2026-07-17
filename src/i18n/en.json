@@ -1,6 +1,12 @@
 {
-  "app": { "title": "LTS Ventures", "subtitle": "Check-in / Check-out System" },
-  "layout": { "toggle": "Switch layout (header / sidebar)", "theme": "Dark / light mode" },
+  "app": {
+    "title": "LTS Ventures",
+    "subtitle": "Check-in / Check-out System"
+  },
+  "layout": {
+    "toggle": "Switch layout (header / sidebar)",
+    "theme": "Dark / light mode"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "attendance": "Attendance",
@@ -11,7 +17,42 @@
     "schedules": "Work Schedules",
     "wifi": "WiFi Networks",
     "users": "Users",
-    "logout": "Log out"
+    "logout": "Log out",
+    "officeLocations": "Office Locations",
+    "notifications": "Notifications",
+    "settings": "Settings"
+  },
+  "settings": {
+    "wfh": {
+      "title": "Work from home (GPS bypass)",
+      "hint": "Selected employees can check in/out from anywhere on this date, without passing the office GPS check.",
+      "date": "Date",
+      "search_placeholder": "Search employee…",
+      "select_all": "Select all",
+      "selected_count": "{{count}} selected",
+      "grant": "Allow work from home",
+      "granted": "Allowed {{count}} employee(s)",
+      "granted_on": "Allowed on {{date}}",
+      "none_granted": "Nobody is allowed to work from home on this date yet",
+      "already": "Allowed",
+      "confirm_title": "Allow work from home?",
+      "confirm_msg": "Allow {{count}} employee(s) to check in/out without GPS on {{date}}?",
+      "revoke_title": "Remove work-from-home permission?",
+      "revoke": "Remove",
+      "scheduled": "Scheduled work-from-home days",
+      "no_scheduled": "No work-from-home days have been set yet",
+      "people_count": "{{count}} people"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "unread": "Unread",
+    "read": "Read",
+    "none_unread": "No new notifications",
+    "view_all": "View all",
+    "mark_all_read": "Mark all read",
+    "all_read": "All marked as read",
+    "unread_count": "{{count}} unread"
   },
   "login": {
     "title": "Sign in",
@@ -44,7 +85,19 @@
     "deleted": "Deleted successfully",
     "error": "Something went wrong",
     "created_by": "Created by",
-    "updated_by": "Updated by"
+    "updated_by": "Updated by",
+    "hrUnit": "hr",
+    "minUnit": "min",
+    "show": "Show",
+    "active_items": "Active items",
+    "deleted_items": "Deleted items",
+    "errors": {
+      "invalid_credentials": "Invalid username or password.",
+      "account_disabled": "This account is disabled.",
+      "account_deleted": "This account has been deleted.",
+      "admin_only": "This account can't sign in to the admin panel (admins only).",
+      "employee_only": "Admins can't sign in to the employee app."
+    }
   },
   "dashboard": {
     "welcome": "Welcome back",
@@ -90,6 +143,7 @@
     "schedule": "Schedule",
     "status": "Status",
     "birth_date": "Date of birth",
+    "contract_end": "Contract end",
     "create_account": "Create a login account",
     "account_section": "Login account",
     "account_hint": "The employee logs in with this username + password.",
@@ -105,7 +159,14 @@
     "account_use_existing": "Use existing account",
     "account_select_existing": "Select an existing account",
     "account_existing_hint": "This account will be linked to the new employee.",
-    "no_linkable": "No available accounts to link."
+    "no_linkable": "No available accounts to link.",
+    "username": "Username",
+    "search_placeholder": "Search name, code or username",
+    "restore": "Restore",
+    "restored": "Restored",
+    "restore_hint": "This employee will be usable again.",
+    "hard_delete": "Delete permanently",
+    "hard_delete_hint": "This permanently removes the employee — it cannot be undone."
   },
   "birthdays": {
     "title": "Birthdays",
@@ -122,8 +183,18 @@
     "view_all": "View all",
     "toast_title": "Birthday today!"
   },
-  "departments": { "title": "Departments", "name": "Name", "new": "New department" },
-  "positions": { "title": "Positions", "name": "Name", "department": "Department", "new": "New position", "select": "Select position" },
+  "departments": {
+    "title": "Departments",
+    "name": "Name",
+    "new": "New department"
+  },
+  "positions": {
+    "title": "Positions",
+    "name": "Name",
+    "department": "Department",
+    "new": "New position",
+    "select": "Select position"
+  },
   "schedules": {
     "title": "Work Schedules",
     "name": "Name",
@@ -163,7 +234,13 @@
     "email_available": "Email is available",
     "email_taken": "This email is already registered",
     "current_password": "Current password",
-    "new_password": "New password"
+    "new_password": "New password",
+    "search_placeholder": "Search username or email",
+    "restore": "Restore",
+    "restored": "Restored",
+    "restore_hint": "This account will be usable again.",
+    "hard_delete": "Delete permanently",
+    "hard_delete_hint": "This permanently removes the account — it cannot be undone."
   },
   "profile_settings": {
     "title": "Profile settings",
@@ -203,5 +280,22 @@
     "selected": "Selected",
     "create": "Create"
   },
-  "roles": { "admin": "Admin", "employee": "Employee" }
+  "roles": {
+    "admin": "Admin",
+    "employee": "Employee"
+  },
+  "officeLocations": {
+    "title": "Office Locations (GPS)",
+    "new": "New location",
+    "name": "Name",
+    "coordinates": "Coordinates",
+    "latitude": "Latitude",
+    "longitude": "Longitude",
+    "radius": "Radius",
+    "active": "Active",
+    "useMyLocation": "Use my current location",
+    "geoUnsupported": "Location not supported by this browser",
+    "geoDenied": "Could not get your location",
+    "coordsRequired": "Enter latitude and longitude (or use \"Use my location\")"
+  }
 }

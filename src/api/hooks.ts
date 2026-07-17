@@ -1,10 +1,13 @@
 import {
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import type {
+  ActorRef,
+  AppNotification,
   Attendance,
   AttendanceStatus,
   BirthdaysResponse,
@@ -151,6 +154,53 @@ export const useDeleteWifi = () => {
   });
 };
 
+// ---------- Office locations (GPS check-in geofences) ----------
+export interface OfficeLocation {
+  id: string;
+  name: string;
+  latitude: number;
+  longitude: number;
+  radiusMeters: number;
+  isActive: boolean;
+  createdBy?: ActorRef | null;
+  updatedBy?: ActorRef | null;
+}
+
+export const useOfficeLocations = () =>
+  useQuery({
+    queryKey: ['office-locations'],
+    queryFn: async () =>
+      (await api.get<OfficeLocation[]>('/working/office-locations')).data,
+  });
+
+export const useSaveOfficeLocation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: Partial<OfficeLocation> & { id?: string }) => {
+      const body = {
+        name: input.name,
+        latitude: input.latitude,
+        longitude: input.longitude,
+        radiusMeters: input.radiusMeters,
+        isActive: input.isActive ?? true,
+      };
+      return input.id
+        ? (await api.patch(`/working/office-locations/${input.id}`, body)).data
+        : (await api.post('/working/office-locations', body)).data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['office-locations'] }),
+  });
+};
+
+export const useDeleteOfficeLocation = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) =>
+      api.delete(`/working/office-locations/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['office-locations'] }),
+  });
+};
+
 // ---------- Employees ----------
 export interface EmployeeQuery {
   page?: number;
@@ -158,6 +208,8 @@ export interface EmployeeQuery {
   search?: string;
   departmentId?: string;
   status?: string;
+  // '"true"' shows the soft-deleted bin instead of active employees.
+  deleted?: string;
 }
 
 export const useEmployees = (query: EmployeeQuery) =>
@@ -165,6 +217,24 @@ export const useEmployees = (query: EmployeeQuery) =>
     queryKey: ['employees', query],
     queryFn: async () =>
       (await api.get<Paginated<Employee>>('/employees', { params: query })).data,
+  });
+
+/**
+ * Paged employee fetch for infinite-scroll pickers: fetches one page at a time
+ * and exposes fetchNextPage. `search` re-keys the query so typing resets it.
+ */
+export const useInfiniteEmployees = (search?: string, limit = 20) =>
+  useInfiniteQuery({
+    queryKey: ['employees-infinite', { search: search || '', limit }],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) =>
+      (
+        await api.get<Paginated<Employee>>('/employees', {
+          params: { page: pageParam, limit, search: search || undefined },
+        })
+      ).data,
+    getNextPageParam: (last) =>
+      last.page < last.totalPages ? last.page + 1 : undefined,
   });
 
 export const useSaveEmployee = () => {
@@ -182,6 +252,24 @@ export const useDeleteEmployee = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => api.delete(`/employees/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+  });
+};
+
+/** Restore a soft-deleted employee (and its linked account). */
+export const useRestoreEmployee = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => api.post(`/employees/${id}/restore`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+  });
+};
+
+/** Permanently delete an employee (irreversible). */
+export const useHardDeleteEmployee = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => api.delete(`/employees/${id}/hard`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
   });
 };
@@ -229,10 +317,27 @@ export const useBirthdays = (withinDays = 2) =>
   });
 
 // ---------- Users ----------
-export const useUsers = () =>
+export interface UserQuery {
+  deleted?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export const useUsers = (query: UserQuery = {}) =>
   useQuery({
-    queryKey: ['users'],
-    queryFn: async () => (await api.get<User[]>('/users')).data,
+    queryKey: ['users', query],
+    queryFn: async () =>
+      (
+        await api.get<Paginated<User>>('/users', {
+          params: {
+            deleted: query.deleted ? 'true' : undefined,
+            search: query.search || undefined,
+            page: query.page,
+            limit: query.limit,
+          },
+        })
+      ).data,
   });
 
 export const useSaveUser = () => {
@@ -250,6 +355,24 @@ export const useDeleteUser = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => api.delete(`/users/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+  });
+};
+
+/** Restore a soft-deleted account (and its linked employee). */
+export const useRestoreUser = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => api.post(`/users/${id}/restore`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+  });
+};
+
+/** Permanently delete an account (irreversible). */
+export const useHardDeleteUser = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => api.delete(`/users/${id}/hard`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
 };
@@ -287,3 +410,105 @@ export const useCheckEmail = (email: string) =>
     enabled: /^\S+@\S+\.\S+$/.test(email.trim()),
     staleTime: 10_000,
   });
+
+// ---------- Notifications (admin) ----------
+export interface NotificationQuery {
+  page?: number;
+  limit?: number;
+  isRead?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
+}
+
+export const useNotifications = (query: NotificationQuery) =>
+  useQuery({
+    queryKey: ['notifications', query],
+    queryFn: async () =>
+      (await api.get<Paginated<AppNotification>>('/notifications', { params: query }))
+        .data,
+  });
+
+/** Initial unread count (the socket keeps it live afterwards). */
+export const useUnreadCount = () =>
+  useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: async () => {
+      const d = (await api.get<{ count: number }>('/notifications/unread-count')).data;
+      return (d as { count?: number })?.count ?? 0;
+    },
+  });
+
+export const useMarkNotifRead = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => api.patch(`/notifications/${id}/read`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+};
+
+export const useMarkAllNotifRead = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => api.patch('/notifications/read-all'),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+};
+
+// ---------- Work-from-home (GPS bypass) grants ----------
+export interface RemoteWorkItem {
+  id: string;
+  employeeId: string;
+  employee: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    employeeCode: string;
+  };
+  createdAt: string;
+}
+export interface RemoteWorkList {
+  date: string;
+  items: RemoteWorkItem[];
+}
+export interface RemoteWorkAll {
+  dates: RemoteWorkList[];
+}
+
+/** Every WFH day the admin has scheduled, grouped by date (newest first). */
+export const useAllRemoteWork = () =>
+  useQuery({
+    queryKey: ['remote-work', 'all'],
+    queryFn: async () =>
+      (await api.get<RemoteWorkAll>('/working/attendance/remote-work/all')).data,
+  });
+
+/** The employees granted a WFH day on `date` (YYYY-MM-DD). */
+export const useRemoteWork = (date: string) =>
+  useQuery({
+    queryKey: ['remote-work', date],
+    queryFn: async () =>
+      (
+        await api.get<RemoteWorkList>('/working/attendance/remote-work', {
+          params: { date },
+        })
+      ).data,
+    enabled: !!date,
+  });
+
+export const useGrantRemoteWork = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { employeeIds: string[]; date: string }) =>
+      (await api.post('/working/attendance/remote-work', input)).data,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['remote-work'] }),
+  });
+};
+
+export const useRevokeRemoteWork = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { employeeId: string; date: string }) =>
+      api.delete('/working/attendance/remote-work', { params: input }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['remote-work'] }),
+  });
+};

@@ -1,7 +1,13 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useDeleteUser, useSaveUser, useUsers } from '@/api/hooks';
+import {
+  useDeleteUser,
+  useHardDeleteUser,
+  useRestoreUser,
+  useSaveUser,
+  useUsers,
+} from '@/api/hooks';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,12 +34,13 @@ import {
 import { EmailHint } from '@/components/ui/email-hint';
 import { UsernameHint } from '@/components/ui/username-hint';
 import { formatDateTime } from '@/lib/utils';
+import { useDebounce } from '@/lib/use-debounce';
 import { useEmailStatus } from '@/lib/use-email-status';
 import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { Role } from '@/types';
-import { ActorCell } from './_shared';
+import { ActorCell, Pagination } from './_shared';
 
 const empty = {
   email: '',
@@ -45,9 +52,21 @@ const empty = {
 
 export function UsersPage() {
   const { t } = useTranslation();
-  const { data, isLoading } = useUsers();
+  // Active list vs the soft-deleted bin, plus a username/email search.
+  const [view, setView] = useState<'active' | 'deleted'>('active');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const debouncedSearch = useDebounce(search, 400);
+  const { data, isLoading } = useUsers({
+    deleted: view === 'deleted',
+    search: debouncedSearch || undefined,
+    page,
+    limit: 10,
+  });
   const save = useSaveUser();
   const del = useDeleteUser();
+  const restore = useRestoreUser();
+  const hardDel = useHardDeleteUser();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(empty);
@@ -111,6 +130,41 @@ export function UsersPage() {
     }
   };
 
+  const onRestore = async (id: string, email: string) => {
+    if (
+      await confirm({
+        title: t('users.restore'),
+        message: `${email} — ${t('users.restore_hint')}`,
+      })
+    ) {
+      try {
+        await restore.mutateAsync(id);
+        toast.success(t('users.restored'));
+      } catch (err: any) {
+        toast.error(err?.apiMessage || t('common.error'));
+      }
+    }
+  };
+
+  const onHardDelete = async (id: string, email: string) => {
+    if (
+      await confirm({
+        title: t('users.hard_delete'),
+        message: `${email} — ${t('users.hard_delete_hint')}`,
+        danger: true,
+      })
+    ) {
+      try {
+        await hardDel.mutateAsync(id);
+        toast.success(t('common.deleted'));
+      } catch (err: any) {
+        toast.error(err?.apiMessage || t('common.error'));
+      }
+    }
+  };
+
+  const deletedView = view === 'deleted';
+
   return (
     <div>
       <PageHeader title={t('users.title')}>
@@ -118,6 +172,34 @@ export function UsersPage() {
           <Plus className="h-4 w-4" /> {t('users.new')}
         </Button>
       </PageHeader>
+
+      <Card className="mb-4">
+        <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>{t('common.search')}</Label>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-8"
+                placeholder={t('users.search_placeholder')}
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t('common.show')}</Label>
+            <SelectField
+              value={view}
+              onValueChange={(v) => { setView(v as 'active' | 'deleted'); setPage(1); }}
+              options={[
+                { value: 'active', label: t('common.active_items') },
+                { value: 'deleted', label: t('common.deleted_items') },
+              ]}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-0">
@@ -142,7 +224,7 @@ export function UsersPage() {
                   </TableCell>
                 </TableRow>
               )}
-              {data?.map((u) => (
+              {data?.items.map((u) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.email}</TableCell>
                   <TableCell className="text-muted-foreground">{u.username ?? '-'}</TableCell>
@@ -157,15 +239,25 @@ export function UsersPage() {
                   <TableCell><ActorCell actor={u.updatedBy} /></TableCell>
                   <TableCell className="text-right">
                     {/* Admin accounts cannot be deleted here. */}
-                    {u.role !== 'admin' && (
-                      <Button variant="ghost" size="icon" onClick={() => onDelete(u.id, u.email)}>
+                    {u.role !== 'admin' && !deletedView && (
+                      <Button variant="ghost" size="icon" title={t('common.delete')} onClick={() => onDelete(u.id, u.email)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
+                    )}
+                    {u.role !== 'admin' && deletedView && (
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="icon" title={t('users.restore')} onClick={() => onRestore(u.id, u.email)}>
+                          <RotateCcw className="h-4 w-4 text-primary" />
+                        </Button>
+                        <Button variant="ghost" size="icon" title={t('users.hard_delete')} onClick={() => onHardDelete(u.id, u.email)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     )}
                   </TableCell>
                 </TableRow>
               ))}
-              {!isLoading && data?.length === 0 && (
+              {!isLoading && (data?.items.length ?? 0) === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
@@ -174,6 +266,13 @@ export function UsersPage() {
               )}
             </TableBody>
           </Table>
+          <div className="px-4 pb-2 pt-2">
+            <Pagination
+              page={page}
+              totalPages={data?.totalPages ?? 1}
+              onPage={setPage}
+            />
+          </div>
         </CardContent>
       </Card>
 

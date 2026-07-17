@@ -1,4 +1,5 @@
 import { Outlet, useLocation } from 'react-router-dom';
+import { useNotificationSocket } from '@/lib/use-notification-socket';
 import { useUIStore } from '@/store/ui.store';
 import { BirthdayToast } from './BirthdayToast';
 import { Sidebar } from './Sidebar';
@@ -10,6 +11,11 @@ export function AppLayout() {
   const mobileOpen = useUIStore((s) => s.mobileOpen);
   const setMobileOpen = useUIStore((s) => s.setMobileOpen);
   const location = useLocation();
+
+  // Live notifications: connects the socket, keeps the bell badge current, and
+  // rings the chime on new arrivals. Mounted here so it lives for the whole
+  // authenticated session.
+  useNotificationSocket();
 
   // Sidebar mode: docked sidebar on desktop + drawer on mobile.
   if (navMode === 'sidebar') {

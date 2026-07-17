@@ -74,12 +74,15 @@ export interface Employee {
   positionId: string | null;
   positionRef?: Position | null;
   birthDate: string | null;
+  contractEndDate: string | null;
   status: EmployeeStatus;
   workScheduleId: string | null;
   workSchedule?: WorkSchedule | null;
   createdAt: string;
   createdBy?: ActorRef | null;
   updatedBy?: ActorRef | null;
+  // Non-null once soft-deleted (sits in the "deleted" bin).
+  deletedAt?: string | null;
 }
 
 export interface WifiNetwork {
@@ -127,6 +130,8 @@ export interface User {
   lastLogin: string | null;
   createdBy?: ActorRef | null;
   updatedBy?: ActorRef | null;
+  // Non-null once soft-deleted (sits in the "deleted" bin).
+  deletedAt?: string | null;
 }
 
 export interface Birthday {
@@ -151,4 +156,14 @@ export interface Paginated<T> {
   page: number;
   limit: number;
   totalPages: number;
+}
+
+export interface AppNotification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  refId: string | null;
+  isRead: boolean;
+  createdAt: string;
 }

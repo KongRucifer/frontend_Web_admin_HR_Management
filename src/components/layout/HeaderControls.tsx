@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
 import { useUIStore } from '@/store/ui.store';
-import { BirthdayBell } from './BirthdayBell';
+import { NotificationBell } from './NotificationBell';
 
 /** Right-hand controls shared by the header nav and the sidebar-mode top bar. */
 export function HeaderControls({ showLogout = true }: { showLogout?: boolean }) {
@@ -60,8 +60,8 @@ export function HeaderControls({ showLogout = true }: { showLogout?: boolean }) 
         )}
       </Button>
 
-      {/* Birthday notifications */}
-      <BirthdayBell />
+      {/* Real-time notifications (approvals, contract & birthday reminders, ...) */}
+      <NotificationBell />
 
       {/* Layout toggle: header <-> sidebar */}
       <Button
