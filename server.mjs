@@ -32,6 +32,32 @@ const PORT = Number(process.env.PORT) || 8086;
 const BACKEND = process.env.BACKEND_ORIGIN || 'http://127.0.0.1:3000';
 const distDir = path.join(__dirname, 'dist');
 
+// A proxied connection that drops mid-flight (a browser refresh, the backend
+// restarting, an idle WebSocket timing out) surfaces as ECONNRESET. http-proxy
+// re-emits it as an 'error' event; with NO handler, Node treats it as fatal and
+// kills the whole door. Swallow it so one dropped socket never takes it down.
+function onProxyError(err, _req, resOrSocket) {
+  // eslint-disable-next-line no-console
+  console.error('[proxy]', err?.code || err?.message || err);
+  if (resOrSocket && typeof resOrSocket.writeHead === 'function') {
+    if (!resOrSocket.headersSent) {
+      try {
+        resOrSocket.writeHead(502, { 'Content-Type': 'text/plain' });
+      } catch {
+        /* headers already gone */
+      }
+    }
+    try {
+      resOrSocket.end('Bad gateway');
+    } catch {
+      /* response already closed */
+    }
+  } else if (resOrSocket && typeof resOrSocket.destroy === 'function') {
+    // WebSocket upgrade: resOrSocket is the raw socket — just drop it.
+    resOrSocket.destroy();
+  }
+}
+
 const app = express();
 
 // Forward the API to the backend, untouched. `pathFilter` (not an express mount
@@ -42,6 +68,7 @@ app.use(
     target: BACKEND,
     changeOrigin: true,
     pathFilter: '/api',
+    on: { error: onProxyError },
   }),
 );
 
@@ -53,6 +80,7 @@ const wsProxy = createProxyMiddleware({
   changeOrigin: true,
   ws: true,
   pathFilter: '/socket.io',
+  on: { error: onProxyError },
 });
 app.use(wsProxy);
 
@@ -72,5 +100,25 @@ const server = app.listen(PORT, () => {
 });
 
 // The 'upgrade' handshake bypasses the express middleware chain, so the ws
-// proxy must be attached to the raw server for socket.io to connect.
-server.on('upgrade', wsProxy.upgrade);
+// proxy must be attached to the raw server for socket.io to connect. The
+// per-socket 'error' listener is essential: a client that vanishes mid-stream
+// throws ECONNRESET on the raw socket, which would otherwise be unhandled.
+server.on('upgrade', (req, socket, head) => {
+  socket.on('error', (e) => {
+    // eslint-disable-next-line no-console
+    console.error('[ws socket]', e?.code || e?.message || e);
+  });
+  wsProxy.upgrade(req, socket, head);
+});
+
+// Last-resort guard: a stray ECONNRESET/EPIPE from a dropped connection must
+// never crash the door. Anything else is logged (and left to pm2 to restart).
+process.on('uncaughtException', (err) => {
+  if (err && (err.code === 'ECONNRESET' || err.code === 'EPIPE')) {
+    // eslint-disable-next-line no-console
+    console.error('[ignored socket error]', err.code);
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.error('[uncaughtException]', err);
+});
