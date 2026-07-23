@@ -101,7 +101,7 @@
   },
   "dashboard": {
     "welcome": "Welcome back",
-    "total_employees": "Employees",
+    "total_employees": "All employees",
     "present_today": "Came to work today",
     "on_time_today": "On time today",
     "late_today": "Late today",
@@ -169,6 +169,10 @@
     "restore": "Restore",
     "restored": "Restored",
     "restore_hint": "This employee will be usable again.",
+    "summary_total": "All employees",
+    "summary_active": "Active",
+    "summary_inactive": "Inactive",
+    "summary_deleted": "Deleted",
     "hard_delete": "Delete permanently",
     "hard_delete_hint": "This permanently removes the employee — it cannot be undone."
   },
@@ -190,14 +194,16 @@
   "departments": {
     "title": "Departments",
     "name": "Name",
-    "new": "New department"
+    "new": "New department",
+    "summary_total": "All departments"
   },
   "positions": {
     "title": "Positions",
     "name": "Name",
     "department": "Department",
     "new": "New position",
-    "select": "Select position"
+    "select": "Select position",
+    "summary_total": "All positions"
   },
   "schedules": {
     "title": "Work Schedules",
@@ -243,6 +249,10 @@
     "restore": "Restore",
     "restored": "Restored",
     "restore_hint": "This account will be usable again.",
+    "summary_total": "All users",
+    "summary_active": "Active",
+    "summary_inactive": "Inactive",
+    "summary_deleted": "Deleted",
     "hard_delete": "Delete permanently",
     "hard_delete_hint": "This permanently removes the account — it cannot be undone."
   },

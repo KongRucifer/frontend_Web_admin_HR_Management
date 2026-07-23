@@ -1,9 +1,58 @@
+import type { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { ActorRef, AttendanceStatus, RequestKind } from '@/types';
+
+/** A single summary tile (icon + big number + label). */
+export interface StatCard {
+  label: string;
+  value: number | string;
+  icon: LucideIcon;
+  /** Tailwind text/bg classes for the icon chip, e.g. 'text-primary bg-primary/10'. */
+  color: string;
+}
+
+/**
+ * A responsive row of summary tiles, reused by the Dashboard-style header on the
+ * Employees / Users / Departments pages. Column count defaults to fit 4 tiles.
+ */
+export function StatCards({
+  stats,
+  className,
+}: {
+  stats: StatCard[];
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4',
+        className,
+      )}
+    >
+      {stats.map((s) => (
+        <Card key={s.label}>
+          <CardContent className="flex items-center gap-4 p-5">
+            <div
+              className={`flex h-12 w-12 items-center justify-center rounded-xl ${s.color}`}
+            >
+              <s.icon className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="text-2xl font-bold">{s.value}</div>
+              <div className="text-sm text-muted-foreground">{s.label}</div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 /** Confirm dialog → delete → success/error toast. Reused across tables. */
 export async function confirmDelete(

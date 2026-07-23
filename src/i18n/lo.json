@@ -101,7 +101,7 @@
   },
   "dashboard": {
     "welcome": "ຍິນດີຕ້ອນຮັບ",
-    "total_employees": "ພະນັກງານ",
+    "total_employees": "ລວມພະນັກງານທັງໝົດ",
     "present_today": "ມາວຽກມື້ນີ້",
     "on_time_today": "ມາທັນໃນມື້ນີ້",
     "late_today": "ມາຊ້າມື້ນີ້",
@@ -169,6 +169,10 @@
     "restore": "ກູ້ຄືນ",
     "restored": "ກູ້ຄືນສຳເລັດ",
     "restore_hint": "ພະນັກງານນີ້ຈະກັບມາໃຊ້ງານໄດ້ອີກຄັ້ງ",
+    "summary_total": "ລວມພະນັກງານທັງໝົດ",
+    "summary_active": "ຍັງໃຊ້ງານ",
+    "summary_inactive": "ບໍ່ໄດ້ໃຊ້ງານແລ້ວ",
+    "summary_deleted": "ຖືກລືບອອກ",
     "hard_delete": "ລົບຖາວອນ",
     "hard_delete_hint": "ຈະລົບຖາວອນ ບໍ່ສາມາດກູ້ຄືນໄດ້"
   },
@@ -190,14 +194,16 @@
   "departments": {
     "title": "ພະແນກ",
     "name": "ຊື່ພະແນກ",
-    "new": "ພະແນກໃໝ່"
+    "new": "ພະແນກໃໝ່",
+    "summary_total": "ລວມພະແນກທັງໝົດ"
   },
   "positions": {
     "title": "ຕຳແໜ່ງ",
     "name": "ຊື່ຕຳແໜ່ງ",
     "department": "ພະແນກ",
     "new": "ຕຳແໜ່ງໃໝ່",
-    "select": "ເລືອກຕຳແໜ່ງ"
+    "select": "ເລືອກຕຳແໜ່ງ",
+    "summary_total": "ລວມຕຳແໜ່ງທັງໝົດ"
   },
   "schedules": {
     "title": "ຕາຕະລາງເຮັດວຽກ",
@@ -243,6 +249,10 @@
     "restore": "ກູ້ຄືນ",
     "restored": "ກູ້ຄືນສຳເລັດ",
     "restore_hint": "ບັນຊີນີ້ຈະກັບມາໃຊ້ງານໄດ້ອີກຄັ້ງ",
+    "summary_total": "ລວມຜູ້ໃຊ້ທັງໝົດ",
+    "summary_active": "ຍັງໃຊ້ງານ",
+    "summary_inactive": "ບໍ່ໄດ້ໃຊ້ງານແລ້ວ",
+    "summary_deleted": "ຖືກລືບອອກ",
     "hard_delete": "ລົບຖາວອນ",
     "hard_delete_hint": "ຈະລົບຖາວອນ ບໍ່ສາມາດກູ້ຄືນໄດ້"
   },

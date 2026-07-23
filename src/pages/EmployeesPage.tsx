@@ -1,10 +1,11 @@
-import { Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
+import { Pencil, Plus, RotateCcw, Trash2, UserCheck, UserMinus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useDeleteEmployee,
   useDepartments,
   useEmployees,
+  useEmployeeSummary,
   useHardDeleteEmployee,
   usePositions,
   useRestoreEmployee,
@@ -46,7 +47,7 @@ import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { Employee } from '@/types';
-import { ActorCell, Pagination } from './_shared';
+import { ActorCell, Pagination, StatCards } from './_shared';
 
 const emptyForm = {
   firstName: '',
@@ -83,6 +84,7 @@ export function EmployeesPage() {
   });
   const departments = useDepartments();
   const positions = usePositions();
+  const summary = useEmployeeSummary();
   // Enough to cover the linkable-account picker (the list is paginated now).
   const users = useUsers({ limit: 100 });
   const save = useSaveEmployee();
@@ -244,6 +246,7 @@ export function EmployeesPage() {
       await confirm({
         title: t('employees.restore'),
         message: `${e.firstName} ${e.lastName} — ${t('employees.restore_hint')}`,
+        confirmLabel: t('employees.restore'),
       })
     ) {
       try {
@@ -279,6 +282,16 @@ export function EmployeesPage() {
           <Plus className="h-4 w-4" /> {t('employees.new')}
         </Button>
       </PageHeader>
+
+      <StatCards
+        className="mb-4"
+        stats={[
+          { label: t('employees.summary_total'), value: summary.data?.total ?? 0, icon: Users, color: 'text-primary bg-primary/10' },
+          { label: t('employees.summary_active'), value: summary.data?.active ?? 0, icon: UserCheck, color: 'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-500/20' },
+          { label: t('employees.summary_inactive'), value: summary.data?.inactive ?? 0, icon: UserMinus, color: 'text-amber-600 bg-amber-100 dark:text-amber-300 dark:bg-amber-500/20' },
+          { label: t('employees.summary_deleted'), value: summary.data?.deleted ?? 0, icon: Trash2, color: 'text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-500/20' },
+        ]}
+      />
 
       <Card className="mb-4">
         <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">

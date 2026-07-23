@@ -66,7 +66,11 @@ export const useSavePosition = () => {
       input.id
         ? (await api.patch(`/positions/${input.id}`, { name: input.name, departmentId: input.departmentId })).data
         : (await api.post('/positions', { name: input.name, departmentId: input.departmentId })).data,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['positions'] }),
+    // Also refresh ['departments'] so the summary tiles (position count) update.
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['positions'] });
+      qc.invalidateQueries({ queryKey: ['departments'] });
+    },
   });
 };
 
@@ -74,7 +78,10 @@ export const useDeletePosition = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => api.delete(`/positions/${id}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['positions'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['positions'] });
+      qc.invalidateQueries({ queryKey: ['departments'] });
+    },
   });
 };
 
@@ -512,3 +519,38 @@ export const useRevokeRemoteWork = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['remote-work'] }),
   });
 };
+
+// ---------- Summary tiles (head-counts) ----------
+export interface CountSummary {
+  total: number;
+  active: number;
+  inactive: number;
+  deleted: number;
+}
+export interface DepartmentSummary {
+  totalDepartments: number;
+  totalPositions: number;
+}
+
+/** Employees head-count tiles. Keyed under ['employees'] so mutations refresh it. */
+export const useEmployeeSummary = () =>
+  useQuery({
+    queryKey: ['employees', 'summary'],
+    queryFn: async () =>
+      (await api.get<CountSummary>('/employees/summary')).data,
+  });
+
+/** Users head-count tiles. Keyed under ['users'] so mutations refresh it. */
+export const useUserSummary = () =>
+  useQuery({
+    queryKey: ['users', 'summary'],
+    queryFn: async () => (await api.get<CountSummary>('/users/summary')).data,
+  });
+
+/** Departments + positions counts. Keyed under ['departments'] to auto-refresh. */
+export const useDepartmentSummary = () =>
+  useQuery({
+    queryKey: ['departments', 'summary'],
+    queryFn: async () =>
+      (await api.get<DepartmentSummary>('/departments/summary')).data,
+  });

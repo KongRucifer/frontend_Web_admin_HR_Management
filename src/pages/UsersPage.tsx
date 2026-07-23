@@ -1,4 +1,4 @@
-import { Plus, RotateCcw, Search, Trash2 } from 'lucide-react';
+import { Plus, RotateCcw, Search, Trash2, UserCheck, UserMinus, Users } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -7,6 +7,7 @@ import {
   useRestoreUser,
   useSaveUser,
   useUsers,
+  useUserSummary,
 } from '@/api/hooks';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +41,7 @@ import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { Role } from '@/types';
-import { ActorCell, Pagination } from './_shared';
+import { ActorCell, Pagination, StatCards } from './_shared';
 
 const empty = {
   email: '',
@@ -63,6 +64,7 @@ export function UsersPage() {
     page,
     limit: 10,
   });
+  const summary = useUserSummary();
   const save = useSaveUser();
   const del = useDeleteUser();
   const restore = useRestoreUser();
@@ -135,6 +137,7 @@ export function UsersPage() {
       await confirm({
         title: t('users.restore'),
         message: `${email} — ${t('users.restore_hint')}`,
+        confirmLabel: t('users.restore'),
       })
     ) {
       try {
@@ -172,6 +175,16 @@ export function UsersPage() {
           <Plus className="h-4 w-4" /> {t('users.new')}
         </Button>
       </PageHeader>
+
+      <StatCards
+        className="mb-4"
+        stats={[
+          { label: t('users.summary_total'), value: summary.data?.total ?? 0, icon: Users, color: 'text-primary bg-primary/10' },
+          { label: t('users.summary_active'), value: summary.data?.active ?? 0, icon: UserCheck, color: 'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-500/20' },
+          { label: t('users.summary_inactive'), value: summary.data?.inactive ?? 0, icon: UserMinus, color: 'text-amber-600 bg-amber-100 dark:text-amber-300 dark:bg-amber-500/20' },
+          { label: t('users.summary_deleted'), value: summary.data?.deleted ?? 0, icon: Trash2, color: 'text-red-600 bg-red-100 dark:text-red-300 dark:bg-red-500/20' },
+        ]}
+      />
 
       <Card className="mb-4">
         <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">

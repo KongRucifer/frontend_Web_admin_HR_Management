@@ -1,10 +1,11 @@
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Briefcase, Building2, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   useDeleteDepartment,
   useDeletePosition,
   useDepartments,
+  useDepartmentSummary,
   usePositions,
   useSaveDepartment,
   useSavePosition,
@@ -32,14 +33,22 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/store/toast.store';
 import type { Department, Position } from '@/types';
-import { confirmDelete } from './_shared';
+import { confirmDelete, StatCards } from './_shared';
 
 export function DepartmentsPage() {
   const { t } = useTranslation();
+  const summary = useDepartmentSummary();
 
   return (
     <div>
       <PageHeader title={t('nav.departments')} />
+      <StatCards
+        className="mb-4 sm:grid-cols-2 lg:grid-cols-2"
+        stats={[
+          { label: t('departments.summary_total'), value: summary.data?.totalDepartments ?? 0, icon: Building2, color: 'text-primary bg-primary/10' },
+          { label: t('positions.summary_total'), value: summary.data?.totalPositions ?? 0, icon: Briefcase, color: 'text-teal-600 bg-teal-100 dark:text-teal-300 dark:bg-teal-500/20' },
+        ]}
+      />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <DepartmentsCard />
         <PositionsCard />
