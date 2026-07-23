@@ -41,7 +41,7 @@ import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { Role } from '@/types';
-import { ActorCell, Pagination, StatCards } from './_shared';
+import { ActorCell, Loading, Pagination, StatCards } from './_shared';
 
 const empty = {
   email: '',
@@ -251,7 +251,7 @@ export function UsersPage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                    {t('common.loading')}
+                    <Loading />
                   </TableCell>
                 </TableRow>
               )}

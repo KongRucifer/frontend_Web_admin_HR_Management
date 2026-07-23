@@ -46,7 +46,7 @@ import { useUsernameStatus } from '@/lib/use-username-status';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import type { Employee } from '@/types';
-import { ActorCell, Pagination, StatCards } from './_shared';
+import { ActorCell, Loading, Pagination, StatCards } from './_shared';
 
 const emptyForm = {
   firstName: '',
@@ -356,7 +356,7 @@ export function EmployeesPage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
-                    {t('common.loading')}
+                    <Loading />
                   </TableCell>
                 </TableRow>
               )}

@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { SelectField } from '@/components/ui/select-menu';
 import { formatDateTime } from '@/lib/utils';
 import { toast } from '@/store/toast.store';
-import { Pagination } from './_shared';
+import { Loading, Pagination } from './_shared';
 
 type ReadFilter = 'all' | 'unread' | 'read';
 
@@ -94,7 +94,7 @@ export function NotificationsPage() {
           <div className="divide-y divide-border">
             {isLoading && (
               <div className="py-10 text-center text-muted-foreground">
-                {t('common.loading')}
+                <Loading />
               </div>
             )}
             {!isLoading && (data?.items.length ?? 0) === 0 && (

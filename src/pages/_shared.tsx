@@ -1,4 +1,4 @@
-import type { LucideIcon } from 'lucide-react';
+import { Loader2, type LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,6 +51,20 @@ export function StatCards({
         </Card>
       ))}
     </div>
+  );
+}
+
+/**
+ * A centered spinner + "loading…" label. Drop it inside a table cell's content
+ * or an empty-state box to replace the old plain "Loading…" text.
+ */
+export function Loading() {
+  const { t } = useTranslation();
+  return (
+    <span className="inline-flex items-center justify-center gap-2 text-muted-foreground">
+      <Loader2 className="h-5 w-5 animate-spin" />
+      {t('common.loading')}
+    </span>
   );
 }
 

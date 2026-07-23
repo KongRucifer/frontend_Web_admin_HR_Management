@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/table';
 import { toast } from '@/store/toast.store';
 import type { Department, Position } from '@/types';
-import { confirmDelete, StatCards } from './_shared';
+import { confirmDelete, Loading, StatCards } from './_shared';
 
 export function DepartmentsPage() {
   const { t } = useTranslation();
@@ -99,7 +99,7 @@ function DepartmentsCard() {
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={2} className="py-8 text-center text-muted-foreground">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={2} className="py-8 text-center text-muted-foreground"><Loading /></TableCell></TableRow>
             )}
             {data?.map((d) => (
               <TableRow key={d.id}>
@@ -183,7 +183,7 @@ function PositionsCard() {
           </TableHeader>
           <TableBody>
             {isLoading && (
-              <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground">{t('common.loading')}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground"><Loading /></TableCell></TableRow>
             )}
             {data?.map((p) => (
               <TableRow key={p.id}>

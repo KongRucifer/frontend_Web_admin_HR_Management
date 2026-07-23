@@ -29,7 +29,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { toast } from '@/store/toast.store';
-import { ActorCell, confirmDelete } from './_shared';
+import { ActorCell, confirmDelete, Loading } from './_shared';
 
 const empty = {
   name: '',
@@ -144,7 +144,7 @@ export function OfficeLocationsPage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                    {t('common.loading')}
+                    <Loading />
                   </TableCell>
                 </TableRow>
               )}

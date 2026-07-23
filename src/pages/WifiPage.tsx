@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { WifiNetwork } from '@/types';
-import { ActorCell, confirmDelete } from './_shared';
+import { ActorCell, confirmDelete, Loading } from './_shared';
 
 const empty = { name: '', ssid: '', bssid: '', wifiCode: '', isActive: true };
 
@@ -80,7 +80,7 @@ export function WifiPage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                    {t('common.loading')}
+                    <Loading />
                   </TableCell>
                 </TableRow>
               )}

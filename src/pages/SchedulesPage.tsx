@@ -30,7 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { WorkSchedule } from '@/types';
-import { ActorCell, confirmDelete } from './_shared';
+import { ActorCell, confirmDelete, Loading } from './_shared';
 
 const empty = { name: '', startTime: '08:00', endTime: '17:00', lateAfterMinutes: 15 };
 
@@ -93,7 +93,7 @@ export function SchedulesPage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                    {t('common.loading')}
+                    <Loading />
                   </TableCell>
                 </TableRow>
               )}

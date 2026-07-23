@@ -20,7 +20,7 @@ import { formatDate } from '@/lib/utils';
 import { confirm } from '@/store/confirm.store';
 import { toast } from '@/store/toast.store';
 import { OfficeLocationsPage } from './OfficeLocationsPage';
-import { Pagination } from './_shared';
+import { Loading, Pagination } from './_shared';
 import { SchedulesPage } from './SchedulesPage';
 
 /** Today as YYYY-MM-DD in the admin's local timezone (Vientiane). */
@@ -276,7 +276,7 @@ function RemoteWorkPanel() {
             >
               {employees.length === 0 && (
                 <div className="py-8 text-center text-sm text-muted-foreground">
-                  {empLoading ? t('common.loading') : t('common.no_data')}
+                  {empLoading ? <Loading /> : t('common.no_data')}
                 </div>
               )}
               {employees.map((e) => {
@@ -311,7 +311,7 @@ function RemoteWorkPanel() {
               })}
               {isFetchingNextPage && (
                 <div className="py-2 text-center text-xs text-muted-foreground">
-                  {t('common.loading')}
+                  <Loading />
                 </div>
               )}
             </div>

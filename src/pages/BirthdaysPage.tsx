@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Confetti } from '@/components/ui/confetti';
 import type { Birthday } from '@/types';
+import { Loading } from './_shared';
 
 const initials = (b: Birthday) =>
   `${b.firstName?.[0] ?? ''}${b.lastName?.[0] ?? ''}`.toUpperCase();
@@ -43,7 +44,7 @@ export function BirthdaysPage() {
 
       {isLoading ? (
         <div className="py-8 text-center text-muted-foreground">
-          {t('common.loading')}
+          <Loading />
         </div>
       ) : today.length === 0 ? (
         <Card>

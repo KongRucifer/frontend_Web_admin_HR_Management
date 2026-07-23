@@ -20,6 +20,7 @@ import { formatDate, formatHoursMinutes, formatTime } from '@/lib/utils';
 import type { AttendanceStatus, RequestKind } from '@/types';
 import {
   CheckOutStatusBadge,
+  Loading,
   Pagination,
   RequestTypeBadge,
   StatusBadge,
@@ -123,7 +124,7 @@ export function AttendancePage() {
               {isLoading && (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
-                    {t('common.loading')}
+                    <Loading />
                   </TableCell>
                 </TableRow>
               )}
