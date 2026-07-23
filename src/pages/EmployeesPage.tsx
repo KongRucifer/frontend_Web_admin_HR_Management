@@ -28,7 +28,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { PasswordInput } from '@/components/ui/password-input';
 import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
 import { SelectField } from '@/components/ui/select-menu';
 import {
   Table,
@@ -456,10 +455,14 @@ export function EmployeesPage() {
               {editing && (
                 <div className="space-y-1.5">
                   <Label>{t('employees.status')}</Label>
-                  <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                    <option value="active">{t('status.active')}</option>
-                    <option value="inactive">{t('status.inactive')}</option>
-                  </Select>
+                  <SelectField
+                    value={form.status}
+                    onValueChange={(v) => setForm({ ...form, status: v })}
+                    options={[
+                      { value: 'active', label: t('status.active') },
+                      { value: 'inactive', label: t('status.inactive') },
+                    ]}
+                  />
                 </div>
               )}
             </div>
