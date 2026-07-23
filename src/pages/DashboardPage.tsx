@@ -1,4 +1,4 @@
-import { CheckCircle2, Clock, LogOut, Users } from 'lucide-react';
+import { CheckCircle2, Clock, LogIn, LogOut, Users } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAttendance, useEmployees } from '@/api/hooks';
 import { PageHeader } from '@/components/PageHeader';
@@ -31,11 +31,14 @@ export function DashboardPage() {
   const items = today.data?.items ?? [];
   const present = items.filter((a) => a.status === 'on_time').length;
   const late = items.filter((a) => a.status === 'late').length;
+  // Came to work today = everyone who actually checked in, on time OR late.
+  const cameToWork = present + late;
   const checkedOut = items.filter((a) => a.checkOutTime).length;
 
   const stats = [
     { label: t('dashboard.total_employees'), value: employees.data?.total ?? 0, icon: Users, color: 'text-primary bg-primary/10' },
-    { label: t('dashboard.present_today'), value: present, icon: CheckCircle2, color: 'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-500/20' },
+    { label: t('dashboard.present_today'), value: cameToWork, icon: LogIn, color: 'text-teal-600 bg-teal-100 dark:text-teal-300 dark:bg-teal-500/20' },
+    { label: t('dashboard.on_time_today'), value: present, icon: CheckCircle2, color: 'text-green-600 bg-green-100 dark:text-green-300 dark:bg-green-500/20' },
     { label: t('dashboard.late_today'), value: late, icon: Clock, color: 'text-amber-600 bg-amber-100 dark:text-amber-300 dark:bg-amber-500/20' },
     { label: t('dashboard.checked_out'), value: checkedOut, icon: LogOut, color: 'text-blue-600 bg-blue-100 dark:text-blue-300 dark:bg-blue-500/20' },
   ];
@@ -44,7 +47,7 @@ export function DashboardPage() {
     <div>
       <PageHeader title={`${t('dashboard.welcome')}, ${user?.username || user?.email}`} />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="flex items-center gap-4 p-5">
