@@ -52,6 +52,29 @@ export function LeftEarlyBadge({ leftEarly }: { leftEarly?: boolean }) {
 }
 
 /**
+ * Departure status, shown in its own column: "left early" (warning) when the
+ * check-out was before the schedule end, "on time" (success) for a normal
+ * check-out, or a dash when the employee has not checked out (absent / leave /
+ * still working).
+ */
+export function CheckOutStatusBadge({
+  checkOutTime,
+  leftEarly,
+}: {
+  checkOutTime?: string | null;
+  leftEarly?: boolean;
+}) {
+  const { t } = useTranslation();
+  if (!checkOutTime) {
+    return <span className="text-muted-foreground">—</span>;
+  }
+  if (leftEarly) {
+    return <Badge variant="warning">{t('status.left_early')}</Badge>;
+  }
+  return <Badge variant="success">{t('status.on_time_out')}</Badge>;
+}
+
+/**
  * Small badge shown beside the Date cell when the day is covered by an approved
  * request. Renders the request's type name ("Annual leave", "Illness"), falling
  * back to the generic kind label. Returns null for ordinary days, so unaffected

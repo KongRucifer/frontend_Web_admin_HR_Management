@@ -116,12 +116,15 @@
     "check_out": "ອອກ",
     "hours": "ຊົ່ວໂມງ",
     "status": "ສະຖານະ",
+    "check_in_status": "ສະຖານະການເຂົ້າວຽກ",
+    "check_out_status": "ສະຖານະການອອກວຽກ",
     "from": "ຈາກວັນທີ",
     "to": "ຫາວັນທີ",
     "wifi_in": "WiFi (ເຂົ້າ)"
   },
   "status": {
     "on_time": "ມາທັນ",
+    "on_time_out": "ອອກຕາມເວລາ",
     "late": "ມາຊ້າ",
     "absent": "ຂາດວຽກ",
     "leave": "ລາພັກ",

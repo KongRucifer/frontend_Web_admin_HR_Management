@@ -116,12 +116,15 @@
     "check_out": "Check out",
     "hours": "Hours",
     "status": "Status",
+    "check_in_status": "Check-in status",
+    "check_out_status": "Check-out status",
     "from": "From",
     "to": "To",
     "wifi_in": "WiFi (in)"
   },
   "status": {
     "on_time": "On time",
+    "on_time_out": "On time",
     "late": "Late",
     "absent": "Absent",
     "leave": "Leave",

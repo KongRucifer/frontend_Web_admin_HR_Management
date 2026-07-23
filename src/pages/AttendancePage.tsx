@@ -19,7 +19,7 @@ import {
 import { formatDate, formatHoursMinutes, formatTime } from '@/lib/utils';
 import type { AttendanceStatus, RequestKind } from '@/types';
 import {
-  LeftEarlyBadge,
+  CheckOutStatusBadge,
   Pagination,
   RequestTypeBadge,
   StatusBadge,
@@ -115,20 +115,21 @@ export function AttendancePage() {
                 <TableHead>{t('attendance.check_in')}</TableHead>
                 <TableHead>{t('attendance.check_out')}</TableHead>
                 <TableHead>{t('attendance.hours')}</TableHead>
-                <TableHead>{t('attendance.status')}</TableHead>
+                <TableHead>{t('attendance.check_in_status')}</TableHead>
+                <TableHead>{t('attendance.check_out_status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     {t('common.loading')}
                   </TableCell>
                 </TableRow>
               )}
               {!isLoading && (data?.items.length ?? 0) === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
                     {t('common.no_data')}
                   </TableCell>
                 </TableRow>
@@ -155,10 +156,13 @@ export function AttendancePage() {
                     {formatHoursMinutes(a.workHours, t('common.hrUnit'), t('common.minUnit'))}
                   </TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap items-center gap-1">
-                      <StatusBadge status={a.status} />
-                      <LeftEarlyBadge leftEarly={a.leftEarly} />
-                    </div>
+                    <StatusBadge status={a.status} />
+                  </TableCell>
+                  <TableCell>
+                    <CheckOutStatusBadge
+                      checkOutTime={a.checkOutTime}
+                      leftEarly={a.leftEarly}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
