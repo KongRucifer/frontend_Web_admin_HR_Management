@@ -329,6 +329,8 @@ export interface UserQuery {
   search?: string;
   page?: number;
   limit?: number;
+  /** true = active only, false = disabled only, undefined = both. */
+  isActive?: boolean;
 }
 
 export const useUsers = (query: UserQuery = {}) =>
@@ -342,6 +344,12 @@ export const useUsers = (query: UserQuery = {}) =>
             search: query.search || undefined,
             page: query.page,
             limit: query.limit,
+            active:
+              query.isActive === undefined
+                ? undefined
+                : query.isActive
+                  ? 'true'
+                  : 'false',
           },
         })
       ).data,

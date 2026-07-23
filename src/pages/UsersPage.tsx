@@ -57,12 +57,15 @@ export function UsersPage() {
   const [view, setView] = useState<'active' | 'deleted'>('active');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  // Filter by account status (in use / disabled). '' = all.
+  const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('');
   const debouncedSearch = useDebounce(search, 400);
   const { data, isLoading } = useUsers({
     deleted: view === 'deleted',
     search: debouncedSearch || undefined,
     page,
     limit: 10,
+    isActive: statusFilter === '' ? undefined : statusFilter === 'active',
   });
   const summary = useUserSummary();
   const save = useSaveUser();
@@ -187,7 +190,7 @@ export function UsersPage() {
       />
 
       <Card className="mb-4">
-        <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-1.5">
             <Label>{t('common.search')}</Label>
             <div className="relative">
@@ -199,6 +202,21 @@ export function UsersPage() {
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>{t('common.status')}</Label>
+            <SelectField
+              value={statusFilter || 'all'}
+              onValueChange={(v) => {
+                setStatusFilter(v === 'all' ? '' : (v as 'active' | 'inactive'));
+                setPage(1);
+              }}
+              options={[
+                { value: 'all', label: t('common.all') },
+                { value: 'active', label: t('status.active') },
+                { value: 'inactive', label: t('status.inactive') },
+              ]}
+            />
           </div>
           <div className="space-y-1.5">
             <Label>{t('common.show')}</Label>

@@ -70,6 +70,8 @@ export function EmployeesPage() {
   const [departmentId, setDepartmentId] = useState('');
   // Active list vs the soft-deleted bin.
   const [view, setView] = useState<'active' | 'deleted'>('active');
+  // Filter by employment status (in use / disabled). '' = all.
+  const [statusFilter, setStatusFilter] = useState<'' | 'active' | 'inactive'>('');
 
   // Only fetch once the user stops typing (waits 400ms).
   const debouncedSearch = useDebounce(search, 400);
@@ -79,6 +81,7 @@ export function EmployeesPage() {
     limit: 10,
     search: debouncedSearch || undefined,
     departmentId: departmentId || undefined,
+    status: statusFilter || undefined,
     deleted: view === 'deleted' ? 'true' : undefined,
   });
   const departments = useDepartments();
@@ -293,7 +296,7 @@ export function EmployeesPage() {
       />
 
       <Card className="mb-4">
-        <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-3">
+        <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
           <Input
             placeholder={t('employees.search_placeholder')}
             value={search}
@@ -306,6 +309,18 @@ export function EmployeesPage() {
             options={[
               { value: 'all', label: t('common.all') },
               ...(departments.data?.map((d) => ({ value: d.id, label: d.name })) ?? []),
+            ]}
+          />
+          <SelectField
+            value={statusFilter || 'all'}
+            onValueChange={(v) => {
+              setStatusFilter(v === 'all' ? '' : (v as 'active' | 'inactive'));
+              setPage(1);
+            }}
+            options={[
+              { value: 'all', label: t('common.status') + ': ' + t('common.all') },
+              { value: 'active', label: t('status.active') },
+              { value: 'inactive', label: t('status.inactive') },
             ]}
           />
           <SelectField
